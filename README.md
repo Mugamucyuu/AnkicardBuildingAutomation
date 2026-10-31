@@ -6,7 +6,7 @@
 
 A local vocabulary workbench for **English, Japanese and Korean**. Generate structured learning cards, look up public pronunciation/media, review the result and import it into Anki.
 
-**Version 0.1.0 · Alpha.** Chinese, Japanese and English interface. [简体中文指南](docs/README.zh-CN.md) · [Configuration](docs/configuration.md) · [Architecture](docs/architecture.md) · [Changelog](CHANGELOG.md)
+**Version 0.1.1 · Alpha.** Chinese, Japanese and English interface. [简体中文指南](docs/README.zh-CN.md) · [Configuration](docs/configuration.md) · [Architecture](docs/architecture.md) · [Changelog](CHANGELOG.md)
 
 ## Features
 

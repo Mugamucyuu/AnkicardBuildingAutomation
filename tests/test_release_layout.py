@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 import tempfile
+import subprocess
+import sys
 import unittest
 from unittest.mock import patch
 
@@ -9,6 +11,14 @@ from vocab_app.prompts import default_prompts
 
 
 class ReleaseLayoutTests(unittest.TestCase):
+    def test_cli_works_with_legacy_windows_stream_encoding(self):
+        (ROOT / "output").mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=ROOT / "output") as directory:
+            result = subprocess.run([sys.executable, "-m", "vocab_app.cli", "--language", "ja", "--word", "猫", "--output-dir", directory],
+                                    cwd=ROOT, env={**os.environ, "PYTHONIOENCODING": "cp1252", "PYTHONUTF8": "0"}, capture_output=True)
+            self.assertEqual(result.returncode, 0, result.stderr.decode("utf-8", errors="replace"))
+            self.assertIn("预览", result.stdout.decode("utf-8"))
+
     def test_resources_and_every_prompt_are_packaged_and_readable(self):
         self.assertTrue((RESOURCE_ROOT / "data/pronunciation/kanjium/LICENSE.txt").is_file())
         self.assertTrue((RESOURCE_ROOT / "examples/notes.json").is_file())

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1
+
+- Use UTF-8 CLI output on Windows regardless of the system/redirected stream code page. Prevent status printing from turning a successful generation or import into a reported failure.
+- Add a subprocess regression test using a legacy ANSI output encoding.
+
 ## 0.1.0
 
 Initial public release.

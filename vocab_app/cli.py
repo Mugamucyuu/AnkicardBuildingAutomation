@@ -2,6 +2,7 @@
 import argparse
 import hashlib
 import json
+import sys
 from pathlib import Path
 
 from vocab_app.settings import Settings, user_data_dir
@@ -12,6 +13,11 @@ from vocab_app.preview import render_preview
 from vocab_app.anki import AnkiClient
 
 def main(argv=None):
+    # Redirected Windows streams can default to a legacy ANSI code page.
+    # Status messages must not turn successful generation/import into a failure.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description="生成词卡预览；默认离线，不调用模型，不写 Anki。")
     parser.add_argument("--language", choices=["en", "ja", "ko"], default="en")
     parser.add_argument("--word", action="append", help="可重复传入多个词汇，含空格的短语请加引号")

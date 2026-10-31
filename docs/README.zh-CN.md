@@ -1,6 +1,6 @@
 # 中文使用指南
 
-Ankicard Building Automation 是本地运行的英日韩词汇制卡工具，支持中日英界面。当前初版为 **0.1.0（Alpha）**。
+Ankicard Building Automation 是本地运行的英日韩词汇制卡工具，支持中日英界面。当前初版为 **0.1.1（Alpha）**，包含 Windows 控制台编码兼容修复。
 
 ## 安装
 
