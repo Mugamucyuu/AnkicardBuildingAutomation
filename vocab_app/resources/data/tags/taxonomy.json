@@ -1,0 +1,2031 @@
+{
+  "format_version": 1,
+  "taxonomy_version": "0.4.0",
+  "status": "draft",
+  "updated": "2026-10-31",
+  "canonical": true,
+  "description_zh": "跨语言词汇标签表；英文标签、中文说明。已接入生成与校验，未迁移旧 Anki。",
+  "naming": {
+    "pattern": "^[a-z][a-z0-9_]*(::[a-z][a-z0-9_]*)*$",
+    "separator": "::",
+    "case": "lowercase",
+    "segment_style": "snake_case",
+    "max_segments": 8,
+    "max_tag_length": 160,
+    "tag_language": "en",
+    "alias_rule": "aliases are lookup-only English alternative names; never write aliases as Anki tags"
+  },
+  "dimensions": [
+    {
+      "id": "pos",
+      "label_zh": "词性",
+      "extension_policy": "controlled"
+    },
+    {
+      "id": "origin",
+      "label_zh": "语源",
+      "extension_policy": "controlled"
+    },
+    {
+      "id": "domain",
+      "label_zh": "主题与专业领域",
+      "extension_policy": "extensible"
+    },
+    {
+      "id": "context",
+      "label_zh": "使用场景",
+      "extension_policy": "extensible"
+    },
+    {
+      "id": "register",
+      "label_zh": "语体",
+      "extension_policy": "extensible"
+    },
+    {
+      "id": "time",
+      "label_zh": "时代与时效",
+      "extension_policy": "extensible"
+    },
+    {
+      "id": "regional",
+      "label_zh": "地域限定用法",
+      "extension_policy": "controlled"
+    },
+    {
+      "id": "connotation",
+      "label_zh": "评价与感情色彩",
+      "extension_policy": "extensible"
+    },
+    {
+      "id": "sensitivity",
+      "label_zh": "冒犯与禁忌",
+      "extension_policy": "extensible"
+    },
+    {
+      "id": "politeness",
+      "label_zh": "礼貌与敬语",
+      "extension_policy": "extensible"
+    },
+    {
+      "id": "form",
+      "label_zh": "词条形式",
+      "extension_policy": "extensible"
+    }
+  ],
+  "rules": {
+    "unit": "note",
+    "sense_link_required": true,
+    "sense_union": true,
+    "language_codes": [
+      "en",
+      "ja",
+      "ko"
+    ],
+    "universal_language_marker": "*",
+    "emit_most_specific_only": true,
+    "emit_parent_tags": false,
+    "parent_search_includes_descendants": true,
+    "group_tags_assignable": false,
+    "unknown": "Optional dimensions may be omitted if unsupported; missing required POS or ja/ko origin blocks publishing instead of guessing.",
+    "origin": {
+      "languages": [
+        "ja",
+        "ko"
+      ],
+      "allowed": [
+        "origin::native",
+        "origin::loanword",
+        "origin::sino"
+      ],
+      "max_per_sense": 3,
+      "mixed_policy": "Assign every applicable origin tag to a mixed-source word; retain component-specific reasons. Origin is required for every ja/ko sense; forbidden for en.",
+      "script_is_not_evidence": true,
+      "required_per_sense": true
+    },
+    "evidence_priority": [
+      "dictionary_sense_label",
+      "dictionary_definition",
+      "reliable_reference",
+      "ai_inference"
+    ],
+    "extension": {
+      "controlled": [
+        "pos",
+        "origin",
+        "regional"
+      ],
+      "extensible": [
+        "domain",
+        "context",
+        "register",
+        "time",
+        "connotation",
+        "sensitivity",
+        "politeness",
+        "form"
+      ],
+      "automatic_use_after_validation": false,
+      "new_top_level_dimension": "requires_user_confirmation",
+      "new_tags_initial_status": "needs_review",
+      "validate_before_use": [
+        "resolve aliases and existing equivalents",
+        "validate English naming and parent",
+        "define meaning and non-overlap",
+        "record language scope and rationale",
+        "check evidence fits the sense",
+        "reject group-only parents as assignments"
+      ],
+      "workflow_statuses": [
+        "seed",
+        "confirmed",
+        "auto_added",
+        "needs_review",
+        "deprecated"
+      ],
+      "seed_meaning": "Initial proposal awaiting user review; not all entries are user-confirmed.",
+      "review_rule": "All new proposals currently require review and do not modify the global catalog automatically.",
+      "merge_rule": "Choose canonical target, preserve alias/redirect and audit trail; update Anki only through a separately implemented migration."
+    },
+    "assignment": [
+      "Use only evidenced senses actually included in the note.",
+      "Match dictionary labels before inferring; retain exact source labels in metadata.",
+      "Do not derive topics from incidental example sentences.",
+      "Use multiple POS tags only when senses justify them.",
+      "Do not force optional dimensions; POS and ja/ko origin are required per sense.",
+      "Record time-sensitive claims with an as-of date.",
+      "Do not infer learner proficiency, frequency, JLPT, TOPIK or CEFR level from AI intuition.",
+      "Regional tags describe restricted usage, not standard language or preferred pronunciation.",
+      "Domains classify core referents and topics, including everyday landforms and plants; technical register is not required. Do not infer domains from incidental examples.",
+      "POS is mandatory per sense; origin is mandatory per ja/ko sense and may be multi-valued for mixed components.",
+      "Neutral common vocabulary is not informal merely because it occurs in conversation."
+    ],
+    "status_storage": "catalog metadata only; not Anki tags",
+    "runtime_boundary": "Generation, catalog validation and semantic tag repair implemented; global proposal registration and old Anki migration remain separate.",
+    "domain_granularity": {
+      "max_segments": 3,
+      "policy": "Keep broad subjects only, e.g. computing, electronics, linguistics. Do not auto-create subfields under these or other subject tags. New broad subjects may be added within this depth; finer subdivisions require user confirmation.",
+      "existing_anki_tags": "Existing user-defined Anki descendants may be reused below the default proposal depth; the three-segment limit applies only to AI-created proposals."
+    },
+    "pos_mapping": {
+      "allowed": [
+        "pos::noun",
+        "pos::verb",
+        "pos::adjective",
+        "pos::adverb",
+        "pos::affix",
+        "pos::other"
+      ],
+      "proper_noun": "pos::noun",
+      "ja_i_adjective": "pos::adjective",
+      "ja_na_adjective": "pos::adjective",
+      "ko_descriptive_adjective": "pos::adjective",
+      "ja_suru_verb": "pos::verb",
+      "remaining_known_categories": "pos::other",
+      "unknown": "omit; do not use other to hide uncertainty",
+      "source_detail": "Preserve original dictionary POS in metadata, not new tags."
+    },
+    "regional_policy": {
+      "en": [
+        "regional::uk",
+        "regional::us",
+        "regional::other"
+      ],
+      "ja": [
+        "regional::kansai",
+        "regional::other"
+      ],
+      "ko": [
+        "regional"
+      ],
+      "default": "omit for standard or mutually intelligible general usage",
+      "evidence": "regional restriction, never accent choice or dictionary publisher location"
+    },
+    "runtime_tag_source": "Merge seed catalog with a read-only per-batch Anki getTags snapshot; generation, review and validation share the snapshot."
+  },
+  "sources": [
+    {
+      "id": "ud",
+      "title": "Universal Dependencies: Universal POS tags",
+      "url": "https://universaldependencies.org/u/pos/all.html",
+      "use_zh": "参考跨语言词性分层思路；本表是面向词汇学习的改编，并非 UD 兼容标注集。"
+    },
+    {
+      "id": "oxford",
+      "title": "Oxford Learner's Dictionaries: Labels",
+      "url": "https://www.oxfordlearnersdictionaries.com/about/english/labels",
+      "use_zh": "参考词典对语体、专业领域、地域和用法限制的区分；未复制其标签表。"
+    },
+    {
+      "id": "cefr",
+      "title": "Council of Europe: CEFR",
+      "url": "https://www.coe.int/en/web/portfolio/the-common-european-framework-of-reference-for-languages-learning-teaching-assessment-cefr-",
+      "use_zh": "参考 personal、public、educational、occupational 四种使用场景，与主题领域分开。"
+    },
+    {
+      "id": "ninjal",
+      "title": "NINJAL: UniDic 中古和文标注规范",
+      "url": "https://clrd.ninjal.ac.jp/chj/doc/unidic-MLJ_rulebook_v1_1.pdf",
+      "use_zh": "说明日本语有混种语边界，不将所有条目强行归入单一三分法。"
+    },
+    {
+      "id": "krdict",
+      "title": "National Institute of Korean Language: Korean Basic Dictionary Open API",
+      "url": "https://krdict.korean.go.kr/kor/openApi/openApiInfo",
+      "use_zh": "参考固有语、汉字语、外来语与混种语的词源分类边界。"
+    },
+    {
+      "id": "anki_search",
+      "title": "Anki Manual: Searching",
+      "url": "https://docs.ankiweb.net/searching.html",
+      "use_zh": "层级标签、组合查询的依据。"
+    },
+    {
+      "id": "anki_filtered",
+      "title": "Anki Manual: Filtered Decks",
+      "url": "https://docs.ankiweb.net/filtered-decks.html",
+      "use_zh": "按标签生成筛选牌组进行复习的依据。"
+    }
+  ],
+  "entries": [
+    {
+      "tag": "pos::noun",
+      "label_zh": "名词",
+      "definition_zh": "指称实体、事件或抽象概念的名词。",
+      "parent": "pos",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "pos::verb",
+      "label_zh": "动词",
+      "definition_zh": "动作、过程或状态动词。",
+      "parent": "pos",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "pos::adjective",
+      "label_zh": "形容词",
+      "definition_zh": "描述性质或状态。",
+      "parent": "pos",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "pos::adverb",
+      "label_zh": "副词",
+      "definition_zh": "修饰谓词、性质或整个句子。",
+      "parent": "pos",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "pos::affix",
+      "label_zh": "词缀",
+      "definition_zh": "作为学习条目收录的前缀或后缀。",
+      "parent": "pos",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "pos::other",
+      "label_zh": "其他词性",
+      "definition_zh": "已确认的其他词性，如代词、数词、限定词、助词、助动词、介词类、连词、感叹词或独立收录的黏着词根；未知词性不归此类。",
+      "parent": "pos",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "origin::native",
+      "label_zh": "固有词",
+      "definition_zh": "日语和语或韩语固有语；不能按文字外观判定。",
+      "parent": "origin",
+      "kind": "assignable",
+      "languages": [
+        "ja",
+        "ko"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "origin::loanword",
+      "label_zh": "外来词",
+      "definition_zh": "按目标语言词典惯例归为外来语；历史上源自汉语不自动归到此类。",
+      "parent": "origin",
+      "kind": "assignable",
+      "languages": [
+        "ja",
+        "ko"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "origin::sino",
+      "label_zh": "汉字词",
+      "definition_zh": "日语汉语／韩语汉字语；包括词典如此分类的本土汉字造词。",
+      "parent": "origin",
+      "kind": "assignable",
+      "languages": [
+        "ja",
+        "ko"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::daily_life",
+      "label_zh": "日常生活",
+      "definition_zh": "日常起居相关词义。",
+      "parent": "domain",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::daily_life::food",
+      "label_zh": "饮食",
+      "definition_zh": "食物、烹饪与饮食行为。",
+      "parent": "domain::daily_life",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::daily_life::housing",
+      "label_zh": "居住",
+      "definition_zh": "住房、家具与家务。",
+      "parent": "domain::daily_life",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::daily_life::clothing",
+      "label_zh": "服饰",
+      "definition_zh": "衣物、穿搭与纺织用品。",
+      "parent": "domain::daily_life",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::daily_life::shopping",
+      "label_zh": "购物",
+      "definition_zh": "购物、商品与消费活动。",
+      "parent": "domain::daily_life",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::daily_life::travel",
+      "label_zh": "旅行",
+      "definition_zh": "旅行、观光与住宿。",
+      "parent": "domain::daily_life",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::daily_life::transport",
+      "label_zh": "交通",
+      "definition_zh": "出行方式、道路与交通活动。",
+      "parent": "domain::daily_life",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::daily_life::relationships",
+      "label_zh": "人际关系",
+      "definition_zh": "家庭、友谊与社会交往。",
+      "parent": "domain::daily_life",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::daily_life::health",
+      "label_zh": "日常健康",
+      "definition_zh": "症状、保健与就医的日常表达；医学术语可同时标 medicine。",
+      "parent": "domain::daily_life",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::daily_life::work",
+      "label_zh": "工作生活",
+      "definition_zh": "求职、办公与职场日常。",
+      "parent": "domain::daily_life",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::daily_life::leisure",
+      "label_zh": "休闲",
+      "definition_zh": "娱乐、兴趣与休闲活动。",
+      "parent": "domain::daily_life",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::sports",
+      "label_zh": "运动",
+      "definition_zh": "体育项目、训练和竞赛术语。",
+      "parent": "domain",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::sports::football",
+      "label_zh": "足球",
+      "definition_zh": "足球运动专门含义。",
+      "parent": "domain::sports",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::sports::basketball",
+      "label_zh": "篮球",
+      "definition_zh": "篮球运动专门含义。",
+      "parent": "domain::sports",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::sports::baseball",
+      "label_zh": "棒球",
+      "definition_zh": "棒球运动专门含义。",
+      "parent": "domain::sports",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::sports::tennis",
+      "label_zh": "网球",
+      "definition_zh": "网球运动专门含义。",
+      "parent": "domain::sports",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::sports::swimming",
+      "label_zh": "游泳",
+      "definition_zh": "游泳运动专门含义。",
+      "parent": "domain::sports",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::sports::athletics",
+      "label_zh": "田径",
+      "definition_zh": "跑、跳、投等田径运动。",
+      "parent": "domain::sports",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::sports::martial_arts",
+      "label_zh": "武术与格斗",
+      "definition_zh": "武术、武道及格斗运动。",
+      "parent": "domain::sports",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::sports::fitness",
+      "label_zh": "健身",
+      "definition_zh": "体能训练和健身活动。",
+      "parent": "domain::sports",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::sports::winter_sports",
+      "label_zh": "冬季运动",
+      "definition_zh": "滑雪、滑冰等冬季运动。",
+      "parent": "domain::sports",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::arts",
+      "label_zh": "艺术",
+      "definition_zh": "艺术创作、作品与鉴赏。",
+      "parent": "domain",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::arts::music",
+      "label_zh": "音乐",
+      "definition_zh": "音乐创作、表演与鉴赏。",
+      "parent": "domain::arts",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::arts::literature",
+      "label_zh": "文学",
+      "definition_zh": "文学创作、体裁和研究；不等于 literary 语体。",
+      "parent": "domain::arts",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::arts::visual_arts",
+      "label_zh": "视觉艺术",
+      "definition_zh": "绘画、雕塑等视觉艺术。",
+      "parent": "domain::arts",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::arts::film",
+      "label_zh": "电影",
+      "definition_zh": "电影制作、影像与电影研究。",
+      "parent": "domain::arts",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::arts::theatre",
+      "label_zh": "戏剧",
+      "definition_zh": "舞台戏剧及表演。",
+      "parent": "domain::arts",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::arts::dance",
+      "label_zh": "舞蹈",
+      "definition_zh": "舞种、动作与编舞。",
+      "parent": "domain::arts",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::arts::photography",
+      "label_zh": "摄影",
+      "definition_zh": "摄影器材与摄影技法。",
+      "parent": "domain::arts",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::arts::design",
+      "label_zh": "设计",
+      "definition_zh": "设计实践、方法与视觉传达。",
+      "parent": "domain::arts",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::business",
+      "label_zh": "商业",
+      "definition_zh": "经营、交易与企业活动。",
+      "parent": "domain",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::business::management",
+      "label_zh": "管理",
+      "definition_zh": "组织、运营与管理术语。",
+      "parent": "domain::business",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::business::marketing",
+      "label_zh": "营销",
+      "definition_zh": "市场研究、广告与推广。",
+      "parent": "domain::business",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::business::sales",
+      "label_zh": "销售",
+      "definition_zh": "销售流程、渠道与客户关系。",
+      "parent": "domain::business",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::business::accounting",
+      "label_zh": "会计",
+      "definition_zh": "记账、报表和审计。",
+      "parent": "domain::business",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::business::finance",
+      "label_zh": "金融",
+      "definition_zh": "资金、投资及金融市场。",
+      "parent": "domain::business",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::business::trade",
+      "label_zh": "贸易",
+      "definition_zh": "国内及国际贸易。",
+      "parent": "domain::business",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::business::logistics",
+      "label_zh": "物流",
+      "definition_zh": "运输、仓储及供应链。",
+      "parent": "domain::business",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::business::human_resources",
+      "label_zh": "人力资源",
+      "definition_zh": "招聘、薪酬与员工管理。",
+      "parent": "domain::business",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::business::entrepreneurship",
+      "label_zh": "创业",
+      "definition_zh": "创业、融资与企业设立。",
+      "parent": "domain::business",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::science",
+      "label_zh": "自然与形式科学",
+      "definition_zh": "科学概念及研究。",
+      "parent": "domain",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::science::mathematics",
+      "label_zh": "数学",
+      "definition_zh": "数学概念、方法与研究。",
+      "parent": "domain::science",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::science::statistics",
+      "label_zh": "统计学",
+      "definition_zh": "统计推断、估计和数据分析。",
+      "parent": "domain::science",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::science::physics",
+      "label_zh": "物理学",
+      "definition_zh": "物质、能量及其规律。",
+      "parent": "domain::science",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::science::chemistry",
+      "label_zh": "化学",
+      "definition_zh": "物质组成、结构及反应。",
+      "parent": "domain::science",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::science::biology",
+      "label_zh": "生物学",
+      "definition_zh": "生命系统、结构与过程。",
+      "parent": "domain::science",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::science::earth_science",
+      "label_zh": "地球科学",
+      "definition_zh": "地球结构及自然过程。",
+      "parent": "domain::science",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::science::astronomy",
+      "label_zh": "天文学",
+      "definition_zh": "天体及宇宙研究。",
+      "parent": "domain::science",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::technology",
+      "label_zh": "技术与工程",
+      "definition_zh": "技术系统、工程方法与实践。",
+      "parent": "domain",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::technology::computing",
+      "label_zh": "计算机技术",
+      "definition_zh": "计算系统、软件与网络。",
+      "parent": "domain::technology",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::technology::electronics",
+      "label_zh": "电子工程",
+      "definition_zh": "电子器件、电路及系统。",
+      "parent": "domain::technology",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::technology::mechanical_engineering",
+      "label_zh": "机械工程",
+      "definition_zh": "机械结构、动力及制造。",
+      "parent": "domain::technology",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::technology::civil_engineering",
+      "label_zh": "土木工程",
+      "definition_zh": "建筑结构、道路及基础设施。",
+      "parent": "domain::technology",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::technology::materials",
+      "label_zh": "材料工程",
+      "definition_zh": "材料性能、加工与应用。",
+      "parent": "domain::technology",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::technology::energy",
+      "label_zh": "能源技术",
+      "definition_zh": "能源转换、储存与供应。",
+      "parent": "domain::technology",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::technology::telecommunications",
+      "label_zh": "通信工程",
+      "definition_zh": "通信信号、链路与系统。",
+      "parent": "domain::technology",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::medicine",
+      "label_zh": "医学",
+      "definition_zh": "疾病、诊断、治疗及医学研究。",
+      "parent": "domain",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::medicine::anatomy",
+      "label_zh": "解剖学",
+      "definition_zh": "身体结构及器官。",
+      "parent": "domain::medicine",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::medicine::physiology",
+      "label_zh": "生理学",
+      "definition_zh": "机体功能与调节。",
+      "parent": "domain::medicine",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::medicine::pharmacology",
+      "label_zh": "药理学",
+      "definition_zh": "药物作用与应用。",
+      "parent": "domain::medicine",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::medicine::mental_health",
+      "label_zh": "精神健康",
+      "definition_zh": "精神疾病、心理健康及干预。",
+      "parent": "domain::medicine",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::medicine::public_health",
+      "label_zh": "公共卫生",
+      "definition_zh": "群体健康、预防和卫生政策。",
+      "parent": "domain::medicine",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::humanities",
+      "label_zh": "人文学科",
+      "definition_zh": "语言、历史、思想与文化研究。",
+      "parent": "domain",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::humanities::linguistics",
+      "label_zh": "语言学",
+      "definition_zh": "语言结构、使用与演变。",
+      "parent": "domain::humanities",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::humanities::history",
+      "label_zh": "历史",
+      "definition_zh": "历史事件、制度与研究。",
+      "parent": "domain::humanities",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::humanities::philosophy",
+      "label_zh": "哲学",
+      "definition_zh": "知识、存在、伦理及思想。",
+      "parent": "domain::humanities",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::humanities::religion",
+      "label_zh": "宗教",
+      "definition_zh": "信仰、仪式及宗教研究。",
+      "parent": "domain::humanities",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::humanities::archaeology",
+      "label_zh": "考古学",
+      "definition_zh": "遗存、发掘及古代社会。",
+      "parent": "domain::humanities",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::social_science",
+      "label_zh": "社会科学",
+      "definition_zh": "社会结构、行为与制度研究。",
+      "parent": "domain",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::social_science::economics",
+      "label_zh": "经济学",
+      "definition_zh": "资源分配、生产与经济机制。",
+      "parent": "domain::social_science",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::social_science::law",
+      "label_zh": "法律",
+      "definition_zh": "法律制度、规则与诉讼。",
+      "parent": "domain::social_science",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::social_science::politics",
+      "label_zh": "政治学",
+      "definition_zh": "权力、治理与政治制度。",
+      "parent": "domain::social_science",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::social_science::sociology",
+      "label_zh": "社会学",
+      "definition_zh": "社会关系、组织与变迁。",
+      "parent": "domain::social_science",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::social_science::psychology",
+      "label_zh": "心理学",
+      "definition_zh": "认知、情绪与行为研究。",
+      "parent": "domain::social_science",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::social_science::education",
+      "label_zh": "教育学",
+      "definition_zh": "教学、学习及教育制度。",
+      "parent": "domain::social_science",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::social_science::anthropology",
+      "label_zh": "人类学",
+      "definition_zh": "人类文化、社会及演化。",
+      "parent": "domain::social_science",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::social_science::geography",
+      "label_zh": "地理学",
+      "definition_zh": "地貌、半岛、河流、山脉、区域与空间关系；包括日常地理名称，不限专业术语。",
+      "parent": "domain::social_science",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::media",
+      "label_zh": "媒体与传播",
+      "definition_zh": "信息传播、新闻与公共表达。",
+      "parent": "domain",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::media::journalism",
+      "label_zh": "新闻",
+      "definition_zh": "采访、报道及新闻工作。",
+      "parent": "domain::media",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::media::internet_culture",
+      "label_zh": "网络文化",
+      "definition_zh": "网络社群、平台文化及网络表达。",
+      "parent": "domain::media",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::games",
+      "label_zh": "游戏",
+      "definition_zh": "游戏机制、玩法与社群术语。",
+      "parent": "domain",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::games::video_games",
+      "label_zh": "电子游戏",
+      "definition_zh": "电子游戏系统及玩法。",
+      "parent": "domain::games",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::games::board_games",
+      "label_zh": "桌面游戏",
+      "definition_zh": "桌游、棋类及卡牌游戏。",
+      "parent": "domain::games",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::environment",
+      "label_zh": "环境",
+      "definition_zh": "环境保护、污染及可持续发展。",
+      "parent": "domain",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::agriculture",
+      "label_zh": "农业",
+      "definition_zh": "种植、养殖与农业生产。",
+      "parent": "domain",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::military",
+      "label_zh": "军事",
+      "definition_zh": "军队、武器与军事行动。",
+      "parent": "domain",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "context::personal",
+      "label_zh": "私人生活",
+      "definition_zh": "主要用于家庭、私人关系或个人事务的表达；不是所有词都默认添加。",
+      "parent": "context",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "context::public",
+      "label_zh": "公共事务",
+      "definition_zh": "主要用于公共服务、社会参与或公共交往的表达。",
+      "parent": "context",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "context::educational",
+      "label_zh": "学习教育",
+      "definition_zh": "主要用于课堂、教学或学习活动的表达。",
+      "parent": "context",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "context::occupational",
+      "label_zh": "职业工作",
+      "definition_zh": "主要用于工作任务和职业交往的表达。",
+      "parent": "context",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "register::formal",
+      "label_zh": "正式",
+      "definition_zh": "受正式场合或规范表达偏好的用法。",
+      "parent": "register",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "register::informal",
+      "label_zh": "非正式",
+      "definition_zh": "词本身明显限于随意、非正式语境；日常可用、常见或中性不等于非正式。",
+      "parent": "register",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "register::colloquial",
+      "label_zh": "日常口语",
+      "definition_zh": "典型日常会话表达；不等于所有可说出口的词。",
+      "parent": "register",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "register::slang",
+      "label_zh": "俚语",
+      "definition_zh": "特定社群或潮流中的非正式表达；不等于一般口语。",
+      "parent": "register",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "register::literary",
+      "label_zh": "文学性",
+      "definition_zh": "具有文学风格的词义；不是所有文学研究术语。",
+      "parent": "register",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "register::academic",
+      "label_zh": "学术",
+      "definition_zh": "具有学术论述语体特征；不是所有学科术语。",
+      "parent": "register",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "register::technical",
+      "label_zh": "专业术语",
+      "definition_zh": "具有特定专业定义或专门使用范围。",
+      "parent": "register",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "register::bureaucratic",
+      "label_zh": "公文行政",
+      "definition_zh": "典型行政、公文或官僚表达。",
+      "parent": "register",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "time::archaic",
+      "label_zh": "古语",
+      "definition_zh": "当代一般使用中已明显古旧，但可能保留在文艺或固定表达中。",
+      "parent": "time",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "time::dated",
+      "label_zh": "过时表达",
+      "definition_zh": "仍可理解但显露较早时代的用语。",
+      "parent": "time",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "time::obsolete",
+      "label_zh": "废用语",
+      "definition_zh": "现代一般用法中已不再使用；须有词典证据。",
+      "parent": "time",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "time::historical",
+      "label_zh": "历史事物",
+      "definition_zh": "指历史制度、器物等；不表示词本身已经废用。",
+      "parent": "time",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "time::neologism",
+      "label_zh": "新词新义",
+      "definition_zh": "有时间依据的新近词或词义；记录判断日期，不能永久当作新词。",
+      "parent": "time",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "connotation::approving",
+      "label_zh": "褒义",
+      "definition_zh": "表达赞许或积极评价；不是仅指好事。",
+      "parent": "connotation",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "connotation::disapproving",
+      "label_zh": "贬义",
+      "definition_zh": "表达不赞许或负面评价；不是仅指坏事。",
+      "parent": "connotation",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "connotation::derogatory",
+      "label_zh": "蔑称",
+      "definition_zh": "贬低、轻蔑地称呼人或群体。",
+      "parent": "connotation",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "connotation::affectionate",
+      "label_zh": "亲昵",
+      "definition_zh": "带有亲近、疼爱或友善色彩。",
+      "parent": "connotation",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "connotation::humorous",
+      "label_zh": "诙谐",
+      "definition_zh": "惯常用于幽默或戏谑表达。",
+      "parent": "connotation",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "connotation::ironic",
+      "label_zh": "反讽",
+      "definition_zh": "具有约定俗成的反讽用法；不能根据任意反讽例句推广。",
+      "parent": "connotation",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "connotation::euphemistic",
+      "label_zh": "委婉",
+      "definition_zh": "用于缓和、回避直接说法的表达。",
+      "parent": "connotation",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "sensitivity::vulgar",
+      "label_zh": "粗俗",
+      "definition_zh": "被认为粗鄙的表达；未必专门攻击对象。",
+      "parent": "sensitivity",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "sensitivity::offensive",
+      "label_zh": "冒犯性",
+      "definition_zh": "可能冒犯听者或特定对象的词义。",
+      "parent": "sensitivity",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "sensitivity::taboo",
+      "label_zh": "禁忌",
+      "definition_zh": "在相关文化中受到强烈使用限制的表达。",
+      "parent": "sensitivity",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "sensitivity::slur",
+      "label_zh": "歧视性蔑称",
+      "definition_zh": "针对身份或群体的侮辱性称呼，要求可靠用法证据。",
+      "parent": "sensitivity",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "politeness::polite",
+      "label_zh": "礼貌表达",
+      "definition_zh": "词汇化或固定的礼貌用语，非仅某例句加了礼貌词尾。",
+      "parent": "politeness",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "politeness::honorific",
+      "label_zh": "尊敬表达",
+      "definition_zh": "词汇本身具有抬高所指人物的尊敬功能。",
+      "parent": "politeness",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "politeness::humble",
+      "label_zh": "谦让表达",
+      "definition_zh": "词汇本身通过自谦表达对他人的尊重。",
+      "parent": "politeness",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "politeness::rude",
+      "label_zh": "失礼表达",
+      "definition_zh": "词汇本身具有明显不礼貌或冒犯交际规范的特征。",
+      "parent": "politeness",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "form::single_word",
+      "label_zh": "单词",
+      "definition_zh": "作为单一词汇单位收录的词；不可只按空格判断。",
+      "parent": "form",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "form::multiword_expression",
+      "label_zh": "多词表达",
+      "definition_zh": "由多个词形成的惯用学习单位。",
+      "parent": "form",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "form::multiword_expression::idiom",
+      "label_zh": "习语",
+      "definition_zh": "整体意义不能直接由各组成部分推得的固定表达。",
+      "parent": "form::multiword_expression",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "form::multiword_expression::collocation",
+      "label_zh": "搭配",
+      "definition_zh": "具有常见共现习惯的词组。",
+      "parent": "form::multiword_expression",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "form::multiword_expression::phrasal_verb",
+      "label_zh": "短语动词",
+      "definition_zh": "词典认定的动词与小品词组合。",
+      "parent": "form::multiword_expression",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "form::multiword_expression::proverb",
+      "label_zh": "谚语",
+      "definition_zh": "表达一般经验或道理的固定句式。",
+      "parent": "form::multiword_expression",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "form::multiword_expression::fixed_expression",
+      "label_zh": "固定表达",
+      "definition_zh": "惯用固定表达，不一定是习语。",
+      "parent": "form::multiword_expression",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "form::abbreviation",
+      "label_zh": "缩写",
+      "definition_zh": "缩略形式的上位类别。",
+      "parent": "form",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "form::abbreviation::acronym",
+      "label_zh": "首字母成词",
+      "definition_zh": "可作为词读出的首字母缩略形式。",
+      "parent": "form::abbreviation",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "form::abbreviation::initialism",
+      "label_zh": "首字母逐字读",
+      "definition_zh": "按字母逐个读出的缩略形式。",
+      "parent": "form::abbreviation",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "form::abbreviation::clipping",
+      "label_zh": "截短词",
+      "definition_zh": "通过截短词形产生的词。",
+      "parent": "form::abbreviation",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "form::onomatopoeia",
+      "label_zh": "拟声拟态",
+      "definition_zh": "模拟声音或状态的表达，具体类别用子标签区分。",
+      "parent": "form",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "form::onomatopoeia::sound_symbolic",
+      "label_zh": "拟声",
+      "definition_zh": "直接模拟声音的表达。",
+      "parent": "form::onomatopoeia",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "form::onomatopoeia::mimetic",
+      "label_zh": "拟态",
+      "definition_zh": "模拟状态、动作或感觉的表达。",
+      "parent": "form::onomatopoeia",
+      "kind": "assignable",
+      "languages": [
+        "*"
+      ],
+      "status": "seed",
+      "aliases": []
+    },
+    {
+      "tag": "regional",
+      "label_zh": "韩语地域限定用法",
+      "definition_zh": "仅韩语：明确受地域限制的用法；标准语或通用词不标。",
+      "parent": null,
+      "kind": "assignable",
+      "languages": [
+        "ko"
+      ],
+      "status": "confirmed",
+      "aliases": []
+    },
+    {
+      "tag": "regional::uk",
+      "label_zh": "英国限定",
+      "definition_zh": "明确限于或明显特属于英国的用法；英美通用词不标。",
+      "parent": "regional",
+      "kind": "assignable",
+      "languages": [
+        "en"
+      ],
+      "status": "confirmed",
+      "aliases": []
+    },
+    {
+      "tag": "regional::us",
+      "label_zh": "美国限定",
+      "definition_zh": "明确限于或明显特属于美国的用法；美式发音偏好不是地域限定。",
+      "parent": "regional",
+      "kind": "assignable",
+      "languages": [
+        "en"
+      ],
+      "status": "confirmed",
+      "aliases": []
+    },
+    {
+      "tag": "regional::other",
+      "label_zh": "其他地区限定",
+      "definition_zh": "英语英美以外或日语关西以外的地域限定用法；具体地区另存。",
+      "parent": "regional",
+      "kind": "assignable",
+      "languages": [
+        "en",
+        "ja"
+      ],
+      "status": "confirmed",
+      "aliases": []
+    },
+    {
+      "tag": "regional::kansai",
+      "label_zh": "关西限定",
+      "definition_zh": "日语明确的关西地域用法。",
+      "parent": "regional",
+      "kind": "assignable",
+      "languages": [
+        "ja"
+      ],
+      "status": "confirmed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::nature",
+      "label_zh": "自然主题",
+      "parent": "domain",
+      "kind": "group",
+      "definition_zh": "自然事物的主题分组。",
+      "languages": [
+        "*"
+      ],
+      "status": "confirmed",
+      "aliases": []
+    },
+    {
+      "tag": "domain::nature::plants",
+      "label_zh": "植物",
+      "parent": "domain::nature",
+      "kind": "assignable",
+      "definition_zh": "植物、树木、花卉及其名称；包括日常用词，不要求植物学专业语体。",
+      "languages": [
+        "*"
+      ],
+      "status": "confirmed",
+      "aliases": []
+    }
+  ]
+}

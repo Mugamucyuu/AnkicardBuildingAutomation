@@ -1,0 +1,12 @@
+* text=auto
+*.py text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.toml text eol=lf
+*.yml text eol=lf
+# Preserve the upstream dataset bytes for SHA-256 verification.
+vocab_app/resources/data/pronunciation/kanjium/accents.tsv -text

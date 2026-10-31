@@ -1,0 +1,75 @@
+{
+  "en:apple": {
+    "senses": [
+      {
+        "id": "s1",
+        "definition": "A round fruit that grows on an apple tree.",
+        "examples": [
+          "She put an apple in her bag."
+        ],
+        "tags": [
+          "pos::noun"
+        ],
+        "tag_reasons": {
+          "pos::noun": "离线结构示例：该词义用作名词。"
+        }
+      }
+    ],
+    "analysis": {
+      "etymology": "离线样例，不代表已核验语源。",
+      "nuance": "离线样例，用于验证数据流和预览布局。",
+      "synonyms": "离线样例，正式辨析将在真实生成时提供。"
+    },
+    "proposed_tags": []
+  },
+  "ja:猫": {
+    "senses": [
+      {
+        "id": "s1",
+        "definition": "身近な家庭で飼われる、小型の哺乳動物。",
+        "examples": [
+          "猫が窓のそばで寝ている。"
+        ],
+        "tags": [
+          "pos::noun",
+          "origin::native"
+        ],
+        "tag_reasons": {
+          "pos::noun": "离线结构示例：该词义用作名词。",
+          "origin::native": "离线结构示例：此词为目标语言固有词。"
+        }
+      }
+    ],
+    "analysis": {
+      "etymology": "离线样例，不代表已核验语源。",
+      "nuance": "离线样例，用于验证数据流和预览布局。",
+      "synonyms": "离线样例，正式辨析将在真实生成时提供。"
+    },
+    "proposed_tags": []
+  },
+  "ko:나무": {
+    "senses": [
+      {
+        "id": "s1",
+        "definition": "具有木质树干和树枝的多年生植物。",
+        "examples": [
+          "마당에 나무 한 그루가 있어요."
+        ],
+        "tags": [
+          "pos::noun",
+          "origin::native"
+        ],
+        "tag_reasons": {
+          "pos::noun": "离线结构示例：该词义用作名词。",
+          "origin::native": "离线结构示例：此词为目标语言固有词。"
+        }
+      }
+    ],
+    "analysis": {
+      "etymology": "离线样例，不代表已核验语源。",
+      "nuance": "离线样例，用于验证数据流和预览布局。",
+      "synonyms": "离线样例，正式辨析将在真实生成时提供。"
+    },
+    "proposed_tags": []
+  }
+}

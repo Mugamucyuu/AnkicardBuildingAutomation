@@ -1,0 +1,6 @@
+配图附加字段 image_plan（不属于讲解正文）：仅选 senses 中一个最常用、可直接拍照或画图展示的词义，不用比喻图硬凑抽象概念。
+具体对象、动作、地形等用 {"sense_id":"s1","topic":"Curd","query":"milk curds","anchors":["curd","curds"],"context":["milk","cheese"],"exclude":["lemon","soy"]}。
+topic 是对应此义的英文百科词条名称，必要时消歧，如 Azure (color)、Squatting position。exclude 优先排除最易混淆的实体或相近食物，而非泛泛排除 film。
+query 必须是 1–6 个英文词的精准图片搜索短语；anchors 为 1–3 个可替代的核心对象词或短语，context 为 1–3 个补充词，exclude 为 0–3 个常见歧义词。各项保持简短，总计不超过 25 个英文词；日韩词也用英文搜图。
+优先清楚展示主体的照片或简单示意图，避免商店、准备步骤或人物观看物体等间接场景；如搜 toy assortment 而非 children looking at toys。
+anchors 必须指向释义里的对象，不能仅为宽泛的领域（如 nature、food、person）；query 包含一个 anchor。多义词配图仅代表 sense_id 的词义。抽象或无法直接展示的词（如 splendor、值/价值）填写 image_plan:null。禁止返回图片 URL。此字段不改变正文语言。

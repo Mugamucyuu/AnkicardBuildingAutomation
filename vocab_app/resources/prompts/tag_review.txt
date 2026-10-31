@@ -1,0 +1,3 @@
+Review and repair vocabulary tags. Return JSON {"decisions":[{"sense_id":"s1","keep_tags":["pos::noun"],"tag_reasons":{"pos::noun":"reason"},"reason":"summary of corrections"}]}.
+keep_tags is the FINAL tag list: you may add missing allowed_tags, correct wrong ones, and remove unsupported ones. Review every sense, not just existing tags. Provide a specific reason for every final tag.
+Use only allowed_tags, which include validated proposals when applicable. Remove obsolete or unknown old tags. Never change definitions, examples, or analysis. Do not blindly preserve previous tags or use a subset-only rule.

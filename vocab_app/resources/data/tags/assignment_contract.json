@@ -1,0 +1,138 @@
+{
+  "format_version": 1,
+  "description_zh": "生成与标注校验约定；日韩 origin 与所有语言 POS 均逐词义必填。",
+  "required_assignment_fields": [
+    "tag",
+    "sense_ids",
+    "evidence",
+    "confidence",
+    "as_of"
+  ],
+  "confidence_values": [
+    "high",
+    "medium",
+    "low"
+  ],
+  "evidence_fields": [
+    "source_type",
+    "source_ref",
+    "source_label",
+    "reason_zh"
+  ],
+  "source_type_values": [
+    "dictionary_sense_label",
+    "dictionary_definition",
+    "reliable_reference",
+    "ai_inference"
+  ],
+  "validation_rules": [
+    "tag must exist and be assignable, or refer to a validated auto_added proposal",
+    "sense_ids must be nonempty and refer to senses in this note",
+    "source_ref must resolve to fetched source metadata or a stored model-run identifier",
+    "confidence is a qualitative review aid, not a calibrated probability",
+    "low-confidence classification is unresolved metadata, not automatically applied",
+    "ancestral duplicates are removed before emitting note_tags",
+    "origin tags are disallowed for en",
+    "parent and child languages must agree; wildcard means language-independent",
+    "pos is limited to noun, verb, adjective, adverb, affix and other; preserve fine POS in source metadata",
+    "AI-proposed domain tags have at most three segments; existing user-defined Anki sublabels may be deeper",
+    "regional uses fixed restricted-use labels only; standard and general usage are untagged",
+    "medium is not a supported dimension",
+    "every sense requires POS; every ja/ko sense requires one or more origin tags",
+    "mixed origin components may emit multiple origin tags with component-specific reasons",
+    "domain describes core topic or referent, not only specialist terminology",
+    "existing Anki tags are merged with the seed vocabulary into a per-batch snapshot used by generation and review",
+    "import revalidates user-defined tags against the current Anki tag list"
+  ],
+  "example": {
+    "language": "en",
+    "headword": "pitch",
+    "senses": [
+      {
+        "id": "s1",
+        "gloss_zh": "音高"
+      }
+    ],
+    "assignments": [
+      {
+        "tag": "pos::noun",
+        "sense_ids": [
+          "s1"
+        ],
+        "evidence": {
+          "source_type": "dictionary_sense_label",
+          "source_ref": "example:dictionary_entry:s1",
+          "source_label": "noun",
+          "reason_zh": "示意：来源词典的该词义标为名词。"
+        },
+        "confidence": "high",
+        "as_of": "2026-10-30"
+      },
+      {
+        "tag": "domain::arts::music",
+        "sense_ids": [
+          "s1"
+        ],
+        "evidence": {
+          "source_type": "dictionary_definition",
+          "source_ref": "example:dictionary_entry:s1",
+          "source_label": null,
+          "reason_zh": "示意：定义明确指声音的音高。"
+        },
+        "confidence": "high",
+        "as_of": "2026-10-30"
+      }
+    ],
+    "note_tags": [
+      "pos::noun",
+      "domain::arts::music"
+    ],
+    "unresolved": [],
+    "notice_zh": "这是结构示意，example: 引用不是真实抓取记录，不可当作已核验词条。"
+  },
+  "new_tag_proposal_example": {
+    "tag": "domain::technology::robotics",
+    "parent": "domain::technology",
+    "label_zh": "机器人技术",
+    "definition_zh": "机器人系统、控制与应用的宽泛技术领域。",
+    "languages": [
+      "*"
+    ],
+    "aliases": [],
+    "rationale_zh": "补充现有表未覆盖的宽泛技术领域，保持与 computing、electronics 同级，不建立其下细分。",
+    "nearest_existing": [
+      "domain::technology::computing",
+      "domain::technology::electronics"
+    ],
+    "status": "auto_added",
+    "created_by": "ai",
+    "created_at": "2026-10-30",
+    "evidence_refs": [
+      "example:dictionary_entry:s1"
+    ],
+    "validation_status": "example_only"
+  },
+  "origin_metadata_example": {
+    "language": "ja",
+    "origin_composition": "mixed",
+    "components": [
+      {
+        "text": "テレビ",
+        "category": "loanword"
+      },
+      {
+        "text": "局",
+        "category": "sino"
+      }
+    ],
+    "origin_tags": [
+      "origin::loanword",
+      "origin::sino"
+    ],
+    "evidence_refs": [
+      "example:reference"
+    ],
+    "notice_zh": "混合来源按构件多选；テレビ为 loanword，局为 sino，两个标签均保留理由。"
+  },
+  "taxonomy_version": "0.4.0"
+}

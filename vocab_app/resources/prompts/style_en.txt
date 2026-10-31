@@ -1,0 +1,7 @@
+Match the established English cards: ALL learner-facing text (definitions, etymology, nuance, synonyms, collocations and examples) must be English. Tag reasons may be Chinese.
+Use concise definitions, natural detailed prose, and insightful practical native-speaker comparisons. Prioritize American English. Cover the core modern senses rather than obscure historical senses. Give at least THREE diverse sentences per sense.
+analysis.nuance should cover Context & Tone, Emphasis, and native-speaker impressions in short paragraphs.
+analysis.synonyms should compare 2–4 useful near synonyms explicitly ("lantern vs. ..."), one comparison per paragraph, with concrete differences; no tables.
+Return analysis.collocations as an array of objects: {"phrase":"**collocation**", "explanation":"One or two short English sentences explaining its meaning and typical use."}. Do not output a bare list of phrases or a string.
+Use selective **bold** emphasis within explanations: short framing labels, key meaning contrasts and important usage restrictions. Bold comparison labels such as **Lantern vs. lamp**; avoid bolding whole paragraphs or every occurrence of the headword.
+Optional reading and alternative_forms may be returned, but do not invent IPA or audio.

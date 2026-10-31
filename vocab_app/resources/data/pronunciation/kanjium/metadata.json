@@ -1,0 +1,13 @@
+{
+  "name": "Kanjium pitch accent data",
+  "revision": "685d4d723d6d20bf9beb169103aeac188eb067ad",
+  "retrieved_at": "2026-10-31",
+  "source_url": "https://raw.githubusercontent.com/mifunetoshiro/kanjium/685d4d723d6d20bf9beb169103aeac188eb067ad/data/source_files/raw/accents.txt",
+  "source_page": "https://github.com/mifunetoshiro/kanjium/blob/685d4d723d6d20bf9beb169103aeac188eb067ad/data/source_files/raw/accents.txt",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "attribution": "The pitch accent notation was provided by Uros O. through the free Kanjium database.",
+  "sha256": "7127719c7c73f2560df63bc0c9082ada08d1587577e6b3de92d921c18058fd09",
+  "records": 124137,
+  "bytes": 3350542
+}

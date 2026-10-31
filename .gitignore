@@ -1,0 +1,41 @@
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 环境文件
+.env
+.env.*
+!.env.example
+output/
+venv/
+.venv/
+.venv-test/
+
+# IDE
+.vscode/
+.idea/
+
+# 系统文件
+Thumbs.db
+.DS_Store
+
+# Build products, local runtime state and private inputs
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+/vocabulary/
+tag_metadata.json
+settings.json
+*.log
+*.apkg
+*.colpkg
+*.anki2
+*.sqlite*
+*.pem
+*.key

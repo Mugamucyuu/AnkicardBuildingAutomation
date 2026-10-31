@@ -1,0 +1,2 @@
+Your previous response failed validation. Return the complete corrected JSON. Fix these issues:
+{issues}
