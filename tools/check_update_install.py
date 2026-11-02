@@ -41,7 +41,7 @@ def main():
                 return io.BytesIO((digest + "  " + name + "\n").encode())
             assert request.full_url == base + name
             return installer.open("rb")
-    manager = UpdateManager(state, can_install=True, current_version="0.2.0", opener=LocalRelease())
+    manager = UpdateManager(state, can_install=True, current_version="0.3.0", opener=LocalRelease())
     manager.check();manager.thread.join(10)
     assert manager.status()["state"] == "available", manager.status()
     manager.download();manager.thread.join(120)

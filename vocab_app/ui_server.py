@@ -108,11 +108,15 @@ def make_handler(service, token):
                 path = urlparse(self.path).path
                 # Freeze writes between update approval, backup and desktop shutdown.
                 with service.lock:
+                    if service.stopping.is_set() and path != "/api/desktop/shutdown":
+                        raise ValueError("正在保存并退出，请重新打开应用后继续。")
                     if service.updates.status()["state"] in ("install_requested", "installing") and path not in (
-                        "/api/updates/cancel", "/api/updates/prepare", "/api/updates/failed"
+                        "/api/updates/cancel", "/api/updates/prepare", "/api/updates/failed", "/api/desktop/shutdown"
                     ):
                         raise ValueError("正在准备安装更新，请等待应用重新打开。")
-                    if path == "/api/settings":
+                    if path == "/api/desktop/shutdown":
+                        result = service.prepare_shutdown()
+                    elif path == "/api/settings":
                         result = service.update_settings(data)
                     elif path == "/api/parse":
                         result = {"words": parse_words(data.get("text", ""))}

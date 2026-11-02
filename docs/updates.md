@@ -72,6 +72,16 @@ the update-button sequence; all theme/editor requests use the real local service
 
 `tools/check_windows_installer.ps1` exercises real Setup, download verification, backup, helper,
 native relaunch, old-directory detection, downgrade rejection, uninstall and retained data.
-Pass `-PreviousInstaller <0.2.0 Setup>` for cross-version migration. Its release transport points
+Pass `-PreviousInstaller <0.3.0 Setup>` for cross-version migration. Its release transport points
 at the local freshly built installer, so no unpublished release or paid service is needed.
 It refuses to run over an existing registered user installation.
+
+## 0.4.0 recovery
+
+Interrupted generation appears as paused on the next launch. Choose Resume generation after re-entering credentials. Ready/imported cards are retained; saved completed stages are reused with the original job snapshots. Pending network requests may already have been billed and may need repeating. Interrupted imports are reconciled using their saved run IDs.
+
+## Original 0.3.0 upgrade limitation
+
+The 0.3.0 native FormClosing handler synchronously evaluates JavaScript on the renderer thread. This can deadlock both title-bar exit and the automatic update shutdown. The fix ships in 0.4.0; publishing new assets cannot patch an already installed old process. If its update install stalls, end that old process and run 0.4.0 Setup once. Setup discovers its original installation and preserves user state. Do not describe the local helper fixture as proof of the original application's end-to-end one-click update.
+
+`tools/check_published_update.py <disposable-installed-exe> --state-directory <isolated-output-dir> --install` drives the installed binary's own official release check, verified download, install request and native update watcher. It records stalled shutdown as a failure. Both paths must be under the repository's `output` directory; use only a disposable installation.

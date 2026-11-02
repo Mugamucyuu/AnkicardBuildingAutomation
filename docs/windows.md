@@ -2,7 +2,7 @@
 
 ## 下载与使用
 
-1. 从 [GitHub Releases](https://github.com/Mugamucyuu/AnkicardBuildingAutomation/releases/latest) 下载 `Ankicard-0.3.0-windows-x64-Setup.exe`。
+1. 从 [GitHub Releases](https://github.com/Mugamucyuu/AnkicardBuildingAutomation/releases/latest) 下载 `Ankicard-0.4.0-windows-x64-Setup.exe`。
 2. 双击安装，默认安装到当前用户，无需管理员权限。桌面快捷方式默认选中。
 3. 从桌面或开始菜单打开 **Ankicard**，原有界面显示在独立窗口中。
 
@@ -18,7 +18,7 @@
 
 - 再次打开同一数据目录的桌面应用时，激活已有窗口，不重复启动服务。
 - 软件自动选择可用的内部端口，只监听本机；无需访问浏览器地址。
-- 关闭窗口即停止对应后台服务。正在生成、批量导入或写入 Anki 时会弹出退出确认。确认退出后，当前网络请求会被中止；下次打开可重试未完成项目。已发出的模型请求可能已经产生费用。
+- 关闭窗口即停止对应后台服务。正在生成、批量导入或写入 Anki 时会弹出退出确认。确认退出前会保存批次进度、原提示词和标签快照；下次打开自动进入任务页，点击「继续生成」。已完成词卡、资料检索、内容撰写、排版与标签复核阶段会复用。尚未返回的请求会中止，服务商可能已计费，恢复时可能需要再次调用。
 - 若导入时退出，已有逻辑会在下次启动标记结果待确认；重试时先按 run ID 核对 Anki，避免盲目重复导入。
 - 在「设置 → 版本与更新」查看版本并一键更新；校验后会备份数据、原位安装并重启。也可运行新版安装包，它会自动识别旧目录。0.2.0 首次升级需运行新版安装包。详见 [版本管理与数据衔接](updates.md)。
 - 从 Windows“已安装的应用”卸载。不会删除 Anki 内容，也不会删除用户数据或共享的 WebView2。
@@ -43,7 +43,7 @@ powershell -ExecutionPolicy Bypass -File tools/build_windows.ps1 `
 .\.venv\Scripts\python.exe tools/check_desktop.py dist/Ankicard/Ankicard.exe
 powershell -ExecutionPolicy Bypass -File tools/check_windows_installer.ps1 `
   -Python .\.venv\Scripts\python.exe `
-  -Installer dist/windows/Ankicard-0.3.0-windows-x64-Setup.exe
+  -Installer dist/windows/Ankicard-0.4.0-windows-x64-Setup.exe
 ```
 
 `prepare_windows_toolchain.ps1` obtains Inno Setup 7.1.1 from its official GitHub release, checks its pinned SHA-256 and signature, and installs the compiler in `output/toolchain/inno`. It downloads the x64 WebView2 Evergreen Standalone Installer from Microsoft's distribution link and checks its Microsoft signature. This shared runtime updates independently; rebuilding later can produce different bytes. Build dependencies and the compiler are pinned, but the result is not claimed to be bit-for-bit reproducible.
@@ -51,7 +51,7 @@ powershell -ExecutionPolicy Bypass -File tools/check_windows_installer.ps1 `
 `build_windows.ps1` generates Windows version resources and consolidated dependency licenses, builds a windowed PyInstaller one-folder application, then wraps it with Inno Setup into one downloadable installer. It packages only selected application resources, never the local state directory. Outputs:
 
 - `dist/Ankicard/`: self-contained application, including Python.
-- `dist/windows/Ankicard-0.3.0-windows-x64-Setup.exe`: distributable installer.
+- `dist/windows/Ankicard-0.4.0-windows-x64-Setup.exe`: distributable installer.
 - `dist/windows/SHA256SUMS.txt`: installer checksum.
 - `dist/windows/BUILD-INFO.json`: application/source revision and compiler/runtime provenance (no local paths or credentials).
 
@@ -59,9 +59,11 @@ The editable icon source is `tools/generate_windows_icon.ps1`; run it to regener
 
 ## Verification and release
 
+`tools/check_desktop_close.py` exercises real native close events, cancelling busy/dirty exits, saved shutdown, restart and rendered resume buttons using isolated offline jobs. `tests/test_resume.py` covers paid-stage reuse and credential checks.
+
 `tests/test_desktop.py` checks the single-instance lock, free-port startup, unchanged API boundary, normal shutdown and worker exit after host failure. The core suite covers the existing application behavior.
 
-`tools/check_desktop.py` runs the actual frozen WebView2 window in a clean working directory and strips Python from PATH. It checks the prompt editor, four palettes, bundled font faces, all eleven prompt stages, offline previews in three languages, and that both the worker process and port are closed on exit. Installer lifecycle checks retain custom prompts, appearance preferences and jobs across reinstall/uninstall. These checks do not use model keys or the real Anki collection.
+`tools/check_desktop.py` runs the actual frozen WebView2 window in a clean working directory and strips Python from PATH. It checks the prompt editor, four palettes, bundled font faces, all twelve prompt stages, offline previews in three languages, and that both the worker process and port are closed on exit. Installer lifecycle checks retain custom prompts, appearance preferences and jobs across reinstall/uninstall. These checks do not use model keys or the real Anki collection.
 
 `tools/check_windows_installer.ps1` uses a disposable installation to exercise the real updater
 helper and native relaunch with a local release fixture, old-directory detection without `/DIR`,

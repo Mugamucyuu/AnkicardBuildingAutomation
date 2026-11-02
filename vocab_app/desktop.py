@@ -22,6 +22,46 @@ from .settings import user_data_dir
 TITLE = "Ankicard Building Automation"
 
 
+class CloseController:
+    """Never wait for renderer/IPC on the synchronous native FormClosing thread."""
+    def __init__(self, window, prepare, on_error):
+        self.window, self.prepare, self.on_error = window, prepare, on_error
+        self.approved = False
+        self.lock = threading.Lock()
+
+    def closing(self):
+        if self.approved:
+            return True
+        if self.lock.acquire(blocking=False):
+            threading.Thread(target=self._prepare, daemon=True, name="desktop-close").start()
+        return False
+
+    def _prepare(self):
+        try:
+            if self.prepare():
+                self.approved = True
+                self.window.destroy()
+        except Exception:
+            self.on_error()
+        finally:
+            self.lock.release()
+
+
+def prompt_is_dirty(window, timeout=3):
+    """A crashed renderer must not hold even the asynchronous exit flow forever."""
+    result, done = [], threading.Event()
+    def check():
+        try:
+            result.append(window.evaluate_js("document.documentElement.dataset.promptDirty === 'true'"))
+        except Exception:
+            pass
+        finally:
+            done.set()
+    threading.Thread(target=check, daemon=True).start()
+    done.wait(timeout)
+    return bool(result and result[0])
+
+
 class SingleInstance:
     """An OS-released lock scoped to the selected user data directory."""
     def __init__(self, directory):
@@ -236,12 +276,12 @@ def main(argv=None):
                 server.request("/api/updates/cancel", {}, token)
             except (OSError, ValueError):
                 pass
-        def closing():
+        def prepare_close():
             if args.smoke_test:
                 return True
             if loaded.is_set():
                 try:
-                    dirty = window.evaluate_js("document.documentElement.dataset.promptDirty === 'true'")
+                    dirty = prompt_is_dirty(window)
                     if dirty and not window.create_confirmation_dialog(TITLE,
                             "提示词有未保存的修改或正在保存。仍要退出吗？\n"
                             "A prompt has unsaved changes or is being saved. Exit anyway?"):
@@ -259,9 +299,13 @@ def main(argv=None):
                     if update_pending.is_set():
                         cancel_update()
                         return False
-                    return window.create_confirmation_dialog(TITLE,
-                        "任务仍在执行，退出将停止任务。下次打开可重试。是否退出？\n"
-                        "Tasks are still running. Exit and retry unfinished items next time?")
+                    if not window.create_confirmation_dialog(TITLE,
+                        "词卡任务仍在执行。退出会暂存进度；下次打开后可继续生成。\n"
+                        "已完成的词卡和模型阶段会保留；尚未返回的请求可能需要重新调用。\n"
+                        "导入中的结果会在下次导入时核对，避免重复。是否保存进度并退出？\n\n"
+                        "Save progress and exit? Completed cards and stages are kept. "
+                        "Unfinished requests may need to run again on resume."):
+                        return False
             except (OSError, ValueError):
                 pass
             if update_pending.is_set():
@@ -277,8 +321,18 @@ def main(argv=None):
                         pass
                     update_pending.clear()
                     return False
+            if server.process.poll() is not None:
+                return True
+            token = server.request("/api/bootstrap")["token"]
+            server.request("/api/desktop/shutdown", {}, token, timeout=60)
             return True
-        window.events.closing += closing
+        def close_error():
+            cancel_update()
+            window.create_confirmation_dialog(TITLE,
+                "暂存进度失败，已取消退出。请检查磁盘空间后重试。\n"
+                "Could not save progress. Exit was cancelled; check free disk space and retry.")
+        close_controller = CloseController(window, prepare_close, close_error)
+        window.events.closing += close_controller.closing
         window.events.closed += closed.set
         loaded = threading.Event()
         window.events.loaded += loaded.set

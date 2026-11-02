@@ -1,6 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.4.0
+
+- Fix the Windows title-bar close deadlock by returning immediately from the native close callback; inspect prompts, confirm active work, save progress and hand off updates asynchronously.
+- Persist interrupted batches as paused, offer Resume generation on restart, validate credentials before resuming and reuse completed research/content/formatting/tag-review checkpoints with immutable batch snapshots. Keep completed cards and run-ID import reconciliation.
 
 - Clarify the formatting return contract and safely normalize exact echoed context envelopes before applying the unchanged protected-content and final style checks.
 - Separate content authoring from formatting: plain-text first drafts retain substantive validation, then a dedicated editable formatting prompt adds emphasis/paragraphs. Reject formatting responses that change protected wording, examples, citations or tags, and apply the full final validator before tag audit/import.

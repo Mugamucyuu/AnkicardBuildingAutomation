@@ -6,7 +6,7 @@
 
 A local vocabulary workbench for **English, Japanese and Korean**. Generate structured learning cards, look up public pronunciation/media, review the result and import it into Anki.
 
-**Version 0.3.0 · Alpha.** Chinese, Japanese and English interface. [简体中文指南](docs/README.zh-CN.md) · [Windows installation](docs/windows.md) · [Configuration](docs/configuration.md) · [Architecture](docs/architecture.md) · [Changelog](CHANGELOG.md)
+**Version 0.4.0 · Alpha.** Chinese, Japanese and English interface. [简体中文指南](docs/README.zh-CN.md) · [Windows installation](docs/windows.md) · [Configuration](docs/configuration.md) · [Architecture](docs/architecture.md) · [Changelog](CHANGELOG.md)
 
 ## Features
 
@@ -32,7 +32,7 @@ A local vocabulary workbench for **English, Japanese and Korean**. Generate stru
 
 ### Windows desktop app (recommended for Windows users)
 
-Download `Ankicard-0.3.0-windows-x64-Setup.exe` from [GitHub Releases](https://github.com/Mugamucyuu/AnkicardBuildingAutomation/releases/latest), run Setup and open **Ankicard** from the desktop or Start menu. Setup automatically installs WebView2 if needed, including without an internet connection. Live generation still needs internet, a model API key and credit; Anki import still needs running Anki with AnkiConnect.
+Download `Ankicard-0.4.0-windows-x64-Setup.exe` from [GitHub Releases](https://github.com/Mugamucyuu/AnkicardBuildingAutomation/releases/latest), run Setup and open **Ankicard** from the desktop or Start menu. Setup automatically installs WebView2 if needed, including without an internet connection. Live generation still needs internet, a model API key and credit; Anki import still needs running Anki with AnkiConnect.
 
 Use **Settings → Version & updates** for one-click updates, or close the app and run the new installer; it detects the previous installation and preserves user data. The first upgrade from 0.2.0 needs the new Setup. This release is unsigned and Windows may show a publisher/reputation prompt. See [Windows guide and build instructions](docs/windows.md).
 

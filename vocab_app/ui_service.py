@@ -26,6 +26,10 @@ DEFAULT_CONCURRENCY = 4
 MAX_CONCURRENCY = 32
 
 
+class GenerationPaused(Exception):
+    """A saved shutdown checkpoint must not start another paid stage."""
+
+
 def validate_concurrency(value):
     if type(value) is not int or not 1 <= value <= MAX_CONCURRENCY:
         raise ValueError(f"并发数必须为 1–{MAX_CONCURRENCY} 的整数。")
@@ -68,6 +72,7 @@ class UIService:
         self.vocabulary_directory = self.directory / "vocabulary"
         self.vocabulary_directory.mkdir(exist_ok=True)
         self.lock = threading.RLock()
+        self.stopping = threading.Event()
         self.pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="vocab-ui")
         self.jobs = {}
         self.settings_path = self.directory / "settings.json"
@@ -79,10 +84,10 @@ class UIService:
             job = json.loads(path.read_text(encoding="utf-8"))
             for item in job["items"]:
                 if item["status"] in ("queued", "generating"):
-                    item.update(status="failed", error="进程已停止；可以重试未完成的词汇。")
+                    item.update(status="paused", error="进程已停止，进度已保留；可继续生成。")
                 elif item["status"] == "importing":
                     item.update(status="uncertain", error="导入结果待核对；再次导入时先按 run_id 检查 Anki。")
-            job["status"] = "complete"
+            job["status"] = "paused" if any(i["status"] == "paused" for i in job["items"]) else "complete"
             if job.get("bulk_import", {}).get("status") in ("queued", "running"):
                 job["bulk_import"]["status"] = "interrupted"
             self.jobs[job["id"]] = job
@@ -92,6 +97,23 @@ class UIService:
 
     def save(self, job):
         write_json(self.directory / "jobs" / job["id"] / "job.json", job)
+
+    def prepare_shutdown(self):
+        """Persist every batch before the desktop terminates its network worker."""
+        with self.lock:
+            self.stopping.set()
+            for job in self.jobs.values():
+                for item in job["items"]:
+                    if item["status"] in ("queued", "generating"):
+                        item.update(status="paused", error="进度已保存，重新打开后可继续生成。")
+                    elif item["status"] == "importing":
+                        item.update(status="uncertain", error="导入结果待核对；再次导入时先按 run_id 检查 Anki。")
+                if any(i["status"] == "paused" for i in job["items"]):
+                    job["status"] = "paused"
+                if job.get("bulk_import", {}).get("status") in ("queued", "running"):
+                    job["bulk_import"]["status"] = "interrupted"
+                self.save(job)
+            return {"ok": True}
 
     def bootstrap(self):
         return {"settings": self.preferences, "prompts": self.prompts.manifest(), "updates": self.updates.status(),
@@ -204,6 +226,8 @@ class UIService:
             return copy.deepcopy(sorted(self.jobs.values(), key=lambda j: j["created"], reverse=True))
 
     def create_job(self, data):
+        if self.stopping.is_set():
+            raise ValueError("正在保存并退出，请重新打开应用后继续。")
         language = data.get("language")
         if language not in ("en", "ja", "ko"):
             raise ValueError("请选择词汇语言。")
@@ -264,6 +288,8 @@ class UIService:
 
     def _status(self, job, item, **values):
         with self.lock:
+            if self.stopping.is_set():
+                return
             item.update(values)
             self.save(job)
 
@@ -274,6 +300,8 @@ class UIService:
         config, item = job["config"], job["items"][index]
         root = self.directory / "jobs" / job_id
         with self.lock:
+            if self.stopping.is_set():
+                return
             if job["cancel"]:
                 self._status(job, item, status="cancelled")
                 return
@@ -282,7 +310,16 @@ class UIService:
             from .request_trace import recording_transport
             model = OfflineClient() if config["provider"] == "offline" else ModelClient(Settings(config["provider"], config["model"]), recording_transport(root / 'requests' / str(index)))
             pipeline = ImportPipeline(model, PublicMediaRegistry(), copy.deepcopy(catalog), prompts=prompts)
+            checkpoint_path = root / "checkpoints" / f"{index}.json"
+            pipeline.resume_state = json.loads(checkpoint_path.read_text(encoding="utf-8")) if checkpoint_path.exists() else {}
+            def checkpoint(state):
+                with self.lock:
+                    write_json(checkpoint_path, state)
+                    if self.stopping.is_set():
+                        raise GenerationPaused()
+            pipeline.checkpoint = checkpoint
             note = pipeline.generate(item["word"], config["language"], config["audio"], config["image"], config["mode"], config["sources"])
+            checkpoint({**pipeline.resume_state, "note": note})
             prefix = f"media/{index}"
             for group in ("pronunciation", "images"):
                 note[group] = download_assets(MediaResult(**note[group]), root / prefix, relative_prefix=prefix).to_dict()
@@ -302,8 +339,10 @@ class UIService:
             self._status(job, item, status="ready", tags=note["note_tags"], proposals=note.get("proposed_tags", []),
                          warnings=note["pronunciation"]["warnings"] + note["images"]["warnings"],
                          preview=f"/preview/{job_id}/{index}.html")
-            if config["auto_import"] and not job["cancel"] and not note.get("proposed_tags"):
+            if config["auto_import"] and not job["cancel"] and not self.stopping.is_set() and not note.get("proposed_tags"):
                 self.import_item(job_id, index)
+        except GenerationPaused:
+            pass
         except Exception as error:
             if getattr(error, 'repair_history', None):
                 try:
@@ -318,6 +357,8 @@ class UIService:
     def run(self, job_id, prompts, catalog):
         job = self.jobs[job_id]
         with self.lock:
+            if self.stopping.is_set():
+                return
             job["status"] = "running"
             self.save(job)
         try:
@@ -334,20 +375,30 @@ class UIService:
                     self._status(job, item, status="failed", error="任务初始化失败，请检查 prompt 配置后重试。")
         finally:
             with self.lock:
-                job["status"] = "cancelled" if job["cancel"] else "complete"
-                self.save(job)
+                if not self.stopping.is_set():
+                    job["status"] = "cancelled" if job["cancel"] else "complete"
+                    self.save(job)
 
     def retry(self, job_id):
         with self.lock:
             job = self.jobs[job_id]
+            if self.stopping.is_set():
+                raise ValueError("应用正在退出。")
             if job["status"] in ("running", "queued") or job.get("bulk_import", {}).get("status") in ("queued", "running"):
                 raise ValueError("任务仍在运行。")
             root = self.directory / "jobs" / job_id
             saved = json.loads((root / "catalog.json").read_text(encoding="utf-8"))
             catalog = TagCatalog(saved["catalog"])
             catalog.snapshot = saved["snapshot"]
+            config = job["config"]
+            if config["provider"] != "offline":
+                Settings(config["provider"], config.get("model", "")).require_model()
+                if not os.getenv(KEY_VARIABLES[config["provider"]]):
+                    raise ValueError("请先在设置中重新填写 API key，再继续生成；已保存的进度会保留。")
+                if config["mode"] == "web" and not self.bootstrap()["search_configured"]:
+                    raise ValueError("请先在设置中填写 DeepSeek 检索密钥。")
             for item in job["items"]:
-                if item["status"] in ("failed", "cancelled"):
+                if item["status"] in ("failed", "cancelled", "paused"):
                     item.update(status="queued", error="")
             if not any(i["status"] == "queued" for i in job["items"]):
                 raise ValueError("没有需要重新生成的词汇。")
@@ -393,6 +444,8 @@ class UIService:
             self.save(job)
         try:
             for index in indices:
+                if self.stopping.is_set():
+                    break
                 try:
                     with self.lock:
                         item = job["items"][index]
@@ -413,12 +466,14 @@ class UIService:
                         self.save(job)
         finally:
             with self.lock:
-                job["bulk_import"]["status"] = "complete"
+                job["bulk_import"]["status"] = "interrupted" if self.stopping.is_set() else "complete"
                 self.save(job)
 
     def import_item(self, job_id, index, deck=None):
         # Serial import and run-id recovery prevent double-click/restart duplicates.
         with self.lock:
+            if self.stopping.is_set():
+                raise ValueError("应用正在退出；导入进度已保留。")
             job = self.jobs[job_id]
             if index < 0 or index >= len(job["items"]):
                 raise ValueError("词卡不存在。")

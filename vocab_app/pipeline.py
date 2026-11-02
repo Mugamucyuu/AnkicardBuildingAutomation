@@ -2,6 +2,7 @@
 import json
 import re
 import hashlib
+import copy
 from datetime import datetime, timezone, timedelta
 from uuid import uuid4
 from .taxonomy import TagCatalog
@@ -31,6 +32,8 @@ class ImportPipeline:
         self.tag_catalog.snapshot_info()
         self.prompts = {**default_prompts(), **(prompts or {})}
         self.tag_policy = self.prompts["tag_policy"]
+        self.resume_state = {}
+        self.checkpoint = None
 
     def generate(self, word, language, pronunciation_source="none", image_source="none", generation_mode="independent", sources=()):
         word = require_text(word, "词汇")
@@ -38,27 +41,38 @@ class ImportPipeline:
             raise ValueError("目前支持 en、ja、ko。")
         if pronunciation_source == "commons" or image_source not in ("none", "auto", "commons"):
             raise ValueError("请选择发音来源和图片来源各自支持的选项。")
+        # A checkpoint belongs to one word and its immutable job snapshots.
+        # Copy values because formatting/tag review mutate content in place.
+        state = self.resume_state if self.checkpoint else {}
+        def stage(name, compute):
+            if name not in state:
+                state[name] = copy.deepcopy(compute())
+            if self.checkpoint:
+                self.checkpoint(state)
+            return copy.deepcopy(state[name])
+        if "note" in state:
+            return stage("note", lambda: None)
         # Validate sources before spending tokens.
-        pronunciation = self.media.lookup(pronunciation_source, language, word).to_dict()
+        pronunciation = stage("pronunciation", lambda: self.media.lookup(pronunciation_source, language, word).to_dict())
         catalog = self.tag_catalog.clone()
         def plan_query(term, lang):
             planner = type(self.model)(self.model.settings, self.model.transport)
             return planner.generate(self.prompts["search_planner"], json.dumps({"word":term,"language":lang},ensure_ascii=False))
-        research = ResearchCollector().collect(word, language, generation_mode, sources, plan_query)
+        research = stage("research", lambda: ResearchCollector().collect(word, language, generation_mode, sources, plan_query))
         instruction = assemble_generation(self.prompts, language, image_source != 'none')
         # Keep the batch-stable catalog before the headword/evidence so different
         # words can share the long input prefix. Values and instructions are unchanged.
         user = json.dumps({**catalog.prompt_context(language), "word": word, "language": language, "research":research}, ensure_ascii=False)
-        content, quality_check = generate_content(
+        content, quality_check = stage("content", lambda: generate_content(
             self.model, instruction, user, language,
             enforce=getattr(self.model, "enforce_readability", False),
             repair_prompt=self.prompts["content_repair"],
             _validation=self.prompts['validation'],
             content_only=True,
-        )
+        ))
         if getattr(self.model, 'enforce_readability', False):
-            content, formatting_check = format_content(self.model,content,language,
-                self.prompts['formatting'],self.prompts['content_repair'],_validation=self.prompts['validation'])
+            content, formatting_check = stage("formatting", lambda: format_content(self.model,content,language,
+                self.prompts['formatting'],self.prompts['content_repair'],_validation=self.prompts['validation']))
             quality_check['formatting'] = formatting_check
         if not isinstance(content, dict):
             raise ValueError("AI 输出必须为 JSON 对象。")
@@ -67,7 +81,12 @@ class ImportPipeline:
             cited=set(re.findall(r"\[(S\d+)\]",json.dumps(content,ensure_ascii=False)))
             if not cited or not cited.issubset(known_ids):
                 raise ValueError("联网回答缺少有效来源标记，或引用了不存在的来源。")
-        tag_audit = audit_tags(self.model, content, language, research, word=word, catalog=catalog, policy=self.tag_policy, prompts=self.prompts, _validation=self.prompts['validation']) if getattr(self.model, "enforce_readability", False) else None
+        def review():
+            audit = audit_tags(self.model, content, language, research, word=word, catalog=catalog, policy=self.tag_policy, prompts=self.prompts, _validation=self.prompts['validation'])
+            return content, audit
+        tag_audit = None
+        if getattr(self.model, "enforce_readability", False):
+            content, tag_audit = stage("tag_audit", review)
         senses = content.get("senses")
         if not isinstance(senses, list) or not senses:
             raise ValueError("至少需要一个词义。")
