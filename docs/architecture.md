@@ -1,5 +1,7 @@
 # Architecture
 
+Generation and tag-audit request JSON places the catalog before changing headword/evidence/prose fields. System instructions and JSON values are unchanged; each stage can reuse its own stable prefix across words. Proposed tags remain in the audit's effective catalog and can shorten the reusable prefix. Cache hits are provider-managed and best-effort. See [token profiling](token-profiling.md) for controlled batch measurements.
+
 ```text
 vocab_app/
   desktop.py        Windows window, single-instance lock and owned worker lifecycle

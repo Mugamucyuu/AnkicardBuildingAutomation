@@ -45,7 +45,9 @@ class ImportPipeline:
             return planner.generate(self.prompts["search_planner"], json.dumps({"word":term,"language":lang},ensure_ascii=False))
         research = ResearchCollector().collect(word, language, generation_mode, sources, plan_query)
         instruction = assemble_generation(self.prompts, language, image_source != 'none')
-        user = json.dumps({"word": word, "language": language, **catalog.prompt_context(language), "research":research}, ensure_ascii=False)
+        # Keep the batch-stable catalog before the headword/evidence so different
+        # words can share the long input prefix. Values and instructions are unchanged.
+        user = json.dumps({**catalog.prompt_context(language), "word": word, "language": language, "research":research}, ensure_ascii=False)
         content, quality_check = generate_content(
             self.model, instruction, user, language,
             enforce=getattr(self.model, "enforce_readability", False),

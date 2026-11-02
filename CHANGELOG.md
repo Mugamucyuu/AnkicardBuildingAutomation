@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Move the unchanged tag catalog before per-word data in generation and tag-audit JSON requests, allowing a batch to reuse longer DeepSeek cache prefixes. Keep prompts, output schemas, proposal handling and all validation/repair rules intact.
+- Add request-equivalence regression tests and an opt-in paid benchmark for sequential en/ja × knowledge/search × 1/10/50-word batches, with batch-level cache isolation and explicit failure-cost accounting.
+
 ## 0.3.0
 
 - Added current/latest version display, optional startup update checks and one-click Windows updates with checksum verification, a local-data backup and automatic relaunch.

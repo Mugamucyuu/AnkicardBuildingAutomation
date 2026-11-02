@@ -12,7 +12,9 @@ def audit_tags(model, content, language, research, word='', catalog=None, policy
     catalog.add_proposals(content.get('proposed_tags', []), language)
     context = catalog.prompt_context(language)
     original = {s['id']: set(s['tags']) for s in content['senses']}
-    payload = {'word': word or content.get('word', ''), 'reading': content.get('reading', ''), 'language': language, 'senses': content['senses'], 'analysis': content.get('analysis', {}), 'sources': research.get('sources', []), **context}
+    # Proposals remain in the effective catalog, with the same validation rules.
+    # Only move the catalog ahead of per-word prose to improve prefix reuse.
+    payload = {**context, 'word': word or content.get('word', ''), 'reading': content.get('reading', ''), 'language': language, 'senses': content['senses'], 'analysis': content.get('analysis', {}), 'sources': research.get('sources', [])}
     known = {e['tag'] for e in context['allowed_tags']}
     instruction = prompts['tag_review'] + '\n\n' + (policy if policy is not None else prompts['tag_policy'])
     feedback = ''
