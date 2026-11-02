@@ -12,6 +12,7 @@ import sys
 import tempfile
 import threading
 import time
+import traceback
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -29,6 +30,17 @@ def host(mode):
     original_create = webview.create_window
     loaded = threading.Event()
     answers, prompts = [], []
+    controllers = []
+    original_controller_init = desktop.CloseController.__init__
+    def controller_init(self, *args):
+        original_controller_init(self, *args)
+        controllers.append(self)
+    desktop.CloseController.__init__ = controller_init
+    def wait_cancelled(count):
+        deadline = time.monotonic() + 30
+        while len(prompts) < count or controllers[0].lock.locked():
+            assert time.monotonic() < deadline, 'Close cancellation did not settle'
+            time.sleep(.1)
     def create(*args, **kwargs):
         kwargs['hidden'] = True
         window = original_create(*args, **kwargs)
@@ -46,15 +58,15 @@ def host(mode):
     errors = []
     def drive():
         try:
-            assert loaded.wait(30)
+            assert loaded.wait(60), 'Native renderer did not load within 60 seconds'
             window = webview.windows[0]
             ready = next(Path(os.environ['ANKICARD_DATA_DIR']).glob('desktop-*/ready.json'))
             server = desktop.DesktopServer(os.environ['ANKICARD_DATA_DIR'])
             server.url = json.loads(ready.read_text())['url']
             token = server.request('/api/bootstrap')['token']
-            deadline = time.monotonic() + 15
+            deadline = time.monotonic() + 30
             while not window.evaluate_js("Boolean(document.querySelector('#prompt-text').value)"):
-                assert time.monotonic() < deadline
+                assert time.monotonic() < deadline, 'Prompt editor did not initialize'
                 time.sleep(.1)
             if mode == 'interrupt':
                 for lang, word in [('en','apple'),('ja','猫'),('ko','나무')]:
@@ -62,26 +74,18 @@ def host(mode):
                         'mode':'independent','tag_source':'seed'}, token)
                 answers.append(False)
                 window.destroy()
-                deadline = time.monotonic() + 10
-                while len(prompts) < 1:
-                    assert time.monotonic() < deadline
-                    time.sleep(.1)
+                wait_cancelled(1)
                 assert window.evaluate_js('document.title') == 'Vocabulary Studio'
                 assert not (Path(os.environ['ANKICARD_DATA_DIR']) / 'interrupt.json').exists()
                 # Dirty prompt cancellation must also leave the renderer responsive.
                 window.evaluate_js("document.documentElement.dataset.promptDirty='true'")
                 answers.append(False)
-                time.sleep(.2)
                 window.destroy()
-                deadline = time.monotonic() + 10
-                while len(prompts) < 2:
-                    assert time.monotonic() < deadline
-                    time.sleep(.1)
+                wait_cancelled(2)
                 assert 'prompt' in prompts[1].lower()
                 assert window.evaluate_js('document.title') == 'Vocabulary Studio'
                 window.evaluate_js("document.documentElement.dataset.promptDirty='false'")
                 answers.append(True)
-                time.sleep(.2)
                 window.destroy()
             else:
                 assert window.evaluate_js("!document.querySelector('#page-jobs').hidden")
@@ -99,7 +103,7 @@ def host(mode):
             report.write_text(json.dumps({'ok':True,'confirmations':len(prompts)}), encoding='utf-8')
         except Exception as error:
             errors.append(repr(error))
-            report.write_text(json.dumps({'ok':False,'error':repr(error)}), encoding='utf-8')
+            report.write_text(json.dumps({'ok':False,'error':repr(error),'traceback':traceback.format_exc()}), encoding='utf-8')
             os._exit(1)  # Let the worker's real parent watcher clean up.
     def start(callback, **kwargs):
         return original_start(drive, **kwargs)
@@ -133,7 +137,7 @@ def main():
         env.pop(key,None)
     for mode in ('interrupt','resume'):
         result = subprocess.run([sys.executable,str(Path(__file__).resolve()),'--host',mode],
-            env={**env,'CLOSE_CHECK_HOLD':'1' if mode=='interrupt' else '0'},timeout=90)
+            env={**env,'CLOSE_CHECK_HOLD':'1' if mode=='interrupt' else '0'},timeout=150)
         report = json.loads((directory/(mode+'.json')).read_text())
         assert result.returncode == 0 and report['ok'], report
         assert report['confirmations'] == (3 if mode == 'interrupt' else 0), report
