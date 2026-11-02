@@ -2,7 +2,7 @@
 
 ## 下载与使用
 
-1. 从 [GitHub Releases](https://github.com/Mugamucyuu/AnkicardBuildingAutomation/releases/latest) 下载 `Ankicard-0.2.0-windows-x64-Setup.exe`。
+1. 从 [GitHub Releases](https://github.com/Mugamucyuu/AnkicardBuildingAutomation/releases/latest) 下载 `Ankicard-0.3.0-windows-x64-Setup.exe`。
 2. 双击安装，默认安装到当前用户，无需管理员权限。桌面快捷方式默认选中。
 3. 从桌面或开始菜单打开 **Ankicard**，原有界面显示在独立窗口中。
 
@@ -20,7 +20,7 @@
 - 软件自动选择可用的内部端口，只监听本机；无需访问浏览器地址。
 - 关闭窗口即停止对应后台服务。正在生成、批量导入或写入 Anki 时会弹出退出确认。确认退出后，当前网络请求会被中止；下次打开可重试未完成项目。已发出的模型请求可能已经产生费用。
 - 若导入时退出，已有逻辑会在下次启动标记结果待确认；重试时先按 run ID 核对 Anki，避免盲目重复导入。
-- 更新前关闭程序，然后运行新版安装包，使用相同安装目录。首版采用手动下载升级，不含自动更新器。
+- 在「设置 → 版本与更新」查看版本并一键更新；校验后会备份数据、原位安装并重启。也可运行新版安装包，它会自动识别旧目录。0.2.0 首次升级需运行新版安装包。详见 [版本管理与数据衔接](updates.md)。
 - 从 Windows“已安装的应用”卸载。不会删除 Anki 内容，也不会删除用户数据或共享的 WebView2。
 
 现有用户数据默认在 `%LOCALAPPDATA%\AnkicardBuildingAutomation`，安装位置默认在 `%LOCALAPPDATA%\Programs\Ankicard`，两者独立。安装版直接使用相同用户数据目录，可读取已有任务、偏好与自定义提示词。高级用户仍可用 `ANKICARD_DATA_DIR` 指向其他目录。桌面与旧版浏览器服务不要同时操作同一数据目录。
@@ -43,7 +43,7 @@ powershell -ExecutionPolicy Bypass -File tools/build_windows.ps1 `
 .\.venv\Scripts\python.exe tools/check_desktop.py dist/Ankicard/Ankicard.exe
 powershell -ExecutionPolicy Bypass -File tools/check_windows_installer.ps1 `
   -Python .\.venv\Scripts\python.exe `
-  -Installer dist/windows/Ankicard-0.2.0-windows-x64-Setup.exe
+  -Installer dist/windows/Ankicard-0.3.0-windows-x64-Setup.exe
 ```
 
 `prepare_windows_toolchain.ps1` obtains Inno Setup 7.1.1 from its official GitHub release, checks its pinned SHA-256 and signature, and installs the compiler in `output/toolchain/inno`. It downloads the x64 WebView2 Evergreen Standalone Installer from Microsoft's distribution link and checks its Microsoft signature. This shared runtime updates independently; rebuilding later can produce different bytes. Build dependencies and the compiler are pinned, but the result is not claimed to be bit-for-bit reproducible.
@@ -51,7 +51,7 @@ powershell -ExecutionPolicy Bypass -File tools/check_windows_installer.ps1 `
 `build_windows.ps1` generates Windows version resources and consolidated dependency licenses, builds a windowed PyInstaller one-folder application, then wraps it with Inno Setup into one downloadable installer. It packages only selected application resources, never the local state directory. Outputs:
 
 - `dist/Ankicard/`: self-contained application, including Python.
-- `dist/windows/Ankicard-0.2.0-windows-x64-Setup.exe`: distributable installer.
+- `dist/windows/Ankicard-0.3.0-windows-x64-Setup.exe`: distributable installer.
 - `dist/windows/SHA256SUMS.txt`: installer checksum.
 - `dist/windows/BUILD-INFO.json`: application/source revision and compiler/runtime provenance (no local paths or credentials).
 
@@ -61,9 +61,13 @@ The editable icon source is `tools/generate_windows_icon.ps1`; run it to regener
 
 `tests/test_desktop.py` checks the single-instance lock, free-port startup, unchanged API boundary, normal shutdown and worker exit after host failure. The core suite covers the existing application behavior.
 
-`tools/check_desktop.py` runs the actual frozen WebView2 window in a clean working directory and strips Python from PATH. It checks the existing page, all eleven prompt stages, offline previews in three languages, and that both the worker process and port are closed on exit. It does not use model keys or the real Anki collection.
+`tools/check_desktop.py` runs the actual frozen WebView2 window in a clean working directory and strips Python from PATH. It checks the prompt editor, four palettes, bundled font faces, all eleven prompt stages, offline previews in three languages, and that both the worker process and port are closed on exit. Installer lifecycle checks retain custom prompts, appearance preferences and jobs across reinstall/uninstall. These checks do not use model keys or the real Anki collection.
 
-`tools/check_windows_installer.ps1` installs into a disposable directory, verifies the installed desktop app, reinstalls to exercise manual upgrade, verifies previous generated jobs still exist, uninstalls, and checks user data is retained. It creates a temporary Windows uninstall entry and removes it on completion. Run it on a build/test machine where Ankicard is not already installed.
+`tools/check_windows_installer.ps1` uses a disposable installation to exercise the real updater
+helper and native relaunch with a local release fixture, old-directory detection without `/DIR`,
+downgrade rejection, uninstall and retained prompts/preferences/nine demo jobs. Add
+`-PreviousInstaller <old Setup>` for cross-version migration. Its temporary uninstall entry is
+removed on completion; it refuses to run over an existing registered user installation.
 
 The GitHub Actions Windows workflow builds and verifies installers for pushes/PRs. A version tag matching `vocab_app.__version__` publishes the verified installer and checksum as GitHub Release assets. The regular CI continues testing the core/browser edition on Windows, macOS and Linux and building wheel/sdist packages.
 

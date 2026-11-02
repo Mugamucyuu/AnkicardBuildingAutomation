@@ -2,6 +2,7 @@
 import argparse
 import json
 import mimetypes
+import re
 import secrets
 import threading
 import webbrowser
@@ -54,10 +55,12 @@ def make_handler(service, token):
                     return self.respond(service.tags(query.get("seed") == ["1"]))
                 if path == "/api/jobs":
                     return self.respond(service.list_jobs())
+                if path == "/api/updates":
+                    return self.respond(service.updates.status())
                 if path == "/api/vocabulary":
                     return self.respond(service.vocabulary(query.get("name", [""])[0]))
                 if path == "/api/prompt":
-                    return self.respond({"text": service.prompts.read(query.get("id", [""])[0], query.get("type", [None])[0])})
+                    return self.respond(service.prompts.document(query.get("id", [""])[0], query.get("type", [None])[0]))
                 if path == '/api/prompts/preview':
                     return self.respond(service.prompt_preview(query.get('language',['en'])[0], images=query.get('images')==['1']))
                 if path == '/api/jobs/prompts':
@@ -73,11 +76,18 @@ def make_handler(service, token):
                     if not permitted or not target.is_relative_to(root):
                         raise FileNotFoundError()
                 else:
-                    name = {"/": "index.html", "/app.js": "app.js", "/style.css": "style.css"}.get(path)
+                    name = {"/": "index.html", "/app.js": "app.js", "/style.css": "style.css",
+                            "/themes.css": "themes.css", "/prompt-editor.js": "prompt-editor.js",
+                            "/updates.js": "updates.js"}.get(path)
+                    if path.startswith("/fonts/"):
+                        font = path.removeprefix("/fonts/")
+                        if re.fullmatch(r"[A-Za-z0-9-]+\.(?:ttf|woff2)", font):
+                            name = "fonts/" + font
                     if not name:
                         raise FileNotFoundError()
                     target = PACKAGE_ROOT / "web" / name
-                return self.respond(target.read_bytes(), content_type=mimetypes.guess_type(target.name)[0] or "application/octet-stream")
+                font_type = {".ttf": "font/ttf", ".woff2": "font/woff2"}.get(target.suffix)
+                return self.respond(target.read_bytes(), content_type=font_type or mimetypes.guess_type(target.name)[0] or "application/octet-stream")
             except FileNotFoundError:
                 self.respond({"error": "Not found"}, 404)
             except (ValueError, RuntimeError, OSError, KeyError):
@@ -96,39 +106,64 @@ def make_handler(service, token):
                 if not isinstance(data, dict):
                     raise ValueError("请求必须是 JSON 对象。")
                 path = urlparse(self.path).path
-                if path == "/api/settings":
-                    result = service.update_settings(data)
-                elif path == "/api/parse":
-                    result = {"words": parse_words(data.get("text", ""))}
-                elif path == "/api/prompts/upload":
-                    with service.prompts.lock:
-                        result = {"id": service.prompts.upload(data.get("name"), data.get("text"), data.get("type", "supplement")), "manifest": service.prompts.manifest()}
-                elif path == "/api/prompts/bind":
-                    with service.prompts.lock:
-                        service.prompts.bind(data.get("stage"), data.get("file"))
-                        result = service.prompts.manifest()
-                elif path == "/api/browse":
-                    result = service.browse(data.get("tags"), data.get("match", "all"))
-                elif path == "/api/jobs":
-                    result = service.create_job(data)
-                elif path == "/api/jobs/cancel":
-                    service.cancel(data["id"])
-                    result = {"ok": True}
-                elif path == "/api/jobs/retry":
-                    service.retry(data["id"])
-                    result = {"ok": True}
-                elif path == "/api/jobs/import":
-                    result = service.import_item(data["id"], int(data["index"]), data.get("deck"))
-                elif path == "/api/jobs/import-all":
-                    result = service.import_all(data["id"], data.get("deck"), data.get("approve_new_tags", False))
-                elif path == "/api/jobs/reject-proposals":
-                    service.reject_proposals(data["id"], int(data["index"]))
-                    result = {"ok": True}
-                elif path == "/api/jobs/approve-proposals":
-                    result = service.approve_proposals(data["id"], int(data["index"]), data.get("deck"))
-                else:
-                    return self.respond({"error": "Not found"}, 404)
-                self.respond(result)
+                # Freeze writes between update approval, backup and desktop shutdown.
+                with service.lock:
+                    if service.updates.status()["state"] in ("install_requested", "installing") and path not in (
+                        "/api/updates/cancel", "/api/updates/prepare", "/api/updates/failed"
+                    ):
+                        raise ValueError("正在准备安装更新，请等待应用重新打开。")
+                    if path == "/api/settings":
+                        result = service.update_settings(data)
+                    elif path == "/api/parse":
+                        result = {"words": parse_words(data.get("text", ""))}
+                    elif path == "/api/prompts/upload":
+                        with service.prompts.lock:
+                            result = {"id": service.prompts.upload(data.get("name"), data.get("text"), data.get("type", "supplement")), "manifest": service.prompts.manifest()}
+                    elif path == "/api/prompts/bind":
+                        with service.prompts.lock:
+                            service.prompts.bind(data.get("stage"), data.get("file"))
+                            result = service.prompts.manifest()
+                    elif path == "/api/prompts/save":
+                        result = service.prompts.save_version(data.get("name"), data.get("text"), data.get("type"),
+                            source=data.get("source"), expected_sha256=data.get("sha256"), activate=data.get("activate", False))
+                    elif path == "/api/prompts/delete":
+                        result = service.prompts.delete(data.get("id"), data.get("sha256"))
+                    elif path == "/api/updates/check":
+                        result = service.updates.check()
+                    elif path == "/api/updates/download":
+                        result = service.updates.download()
+                    elif path == "/api/updates/install":
+                        result = service.request_update_install()
+                    elif path == "/api/updates/cancel":
+                        result = service.updates.cancel()
+                    elif path == "/api/updates/prepare":
+                        with service.prompts.lock:
+                            result = service.updates.prepare_install()
+                    elif path == "/api/updates/failed":
+                        service.updates.install_failed()
+                        result = service.updates.status()
+                    elif path == "/api/browse":
+                        result = service.browse(data.get("tags"), data.get("match", "all"))
+                    elif path == "/api/jobs":
+                        result = service.create_job(data)
+                    elif path == "/api/jobs/cancel":
+                        service.cancel(data["id"])
+                        result = {"ok": True}
+                    elif path == "/api/jobs/retry":
+                        service.retry(data["id"])
+                        result = {"ok": True}
+                    elif path == "/api/jobs/import":
+                        result = service.import_item(data["id"], int(data["index"]), data.get("deck"))
+                    elif path == "/api/jobs/import-all":
+                        result = service.import_all(data["id"], data.get("deck"), data.get("approve_new_tags", False))
+                    elif path == "/api/jobs/reject-proposals":
+                        service.reject_proposals(data["id"], int(data["index"]))
+                        result = {"ok": True}
+                    elif path == "/api/jobs/approve-proposals":
+                        result = service.approve_proposals(data["id"], int(data["index"]), data.get("deck"))
+                    else:
+                        return self.respond({"error": "Not found"}, 404)
+                    self.respond(result)
             except (ValueError, KeyError, TypeError, IndexError, FileNotFoundError) as error:
                 self.respond({"error": str(error)}, 400)
             except (RuntimeError, OSError):

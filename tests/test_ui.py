@@ -216,6 +216,41 @@ class UIHTTPTests(unittest.TestCase):
         self.assertIn(b"apple", preview)
         self.assertEqual(self.request(f"/preview/{job_id}/prompts.json")[0], 404)
 
+    def test_prompt_edit_delete_and_static_assets_through_http(self):
+        headers = {"Content-Type": "application/json", "X-Vocab-Token": "test-token"}
+        body = {"name": "style.md", "text": "Custom style", "type": "style_en", "activate": True}
+        self.assertEqual(self.request("/api/prompts/save", body)[0], 403)
+        status, data = self.request("/api/prompts/save", body, headers)
+        self.assertEqual(status, 200)
+        saved = json.loads(data)
+        self.assertEqual(self.service.prompts.snapshot()["style_en"], "Custom style")
+        status, data = self.request("/api/prompt?id=" + saved["id"] + "&type=style_en")
+        self.assertEqual(status, 200)
+        self.assertEqual(json.loads(data)["sha256"], saved["sha256"])
+        deletion = {"id": saved["id"], "sha256": saved["sha256"]}
+        self.assertEqual(self.request("/api/prompts/delete", deletion)[0], 403)
+        self.assertEqual(self.request("/api/prompts/delete", deletion, headers)[0], 200)
+        self.assertNotEqual(self.service.prompts.snapshot()["style_en"], "Custom style")
+        for asset in ("/themes.css", "/prompt-editor.js", "/fonts/Inter.ttf"):
+            self.assertEqual(self.request(asset)[0], 200)
+        for path in ("/fonts/../../settings.json", "/fonts/Inter.ttf:other.ttf", "/fonts/sources.json"):
+            self.assertEqual(self.request(path)[0], 404)
+
+    def test_update_routes_require_token_and_freeze_writes_until_cancelled(self):
+        headers = {"Content-Type": "application/json", "X-Vocab-Token": "test-token"}
+        self.assertEqual(self.request("/api/updates/install", {})[0], 403)
+        self.assertEqual(self.request("/api/updates/check", {})[0], 403)
+        status, body = self.request("/api/updates")
+        self.assertEqual(status, 200)
+        self.assertFalse(json.loads(body)["can_install"])
+        self.service.updates.can_install = True
+        self.service.updates.state["state"] = "ready"
+        self.assertEqual(self.request("/api/updates/install", {}, headers)[0], 200)
+        self.assertEqual(self.request("/api/settings", {"theme": "dark"}, headers)[0], 400)
+        self.assertEqual(self.request("/api/prompts/upload", {"type": "generation", "name": "x.md", "text": "x"}, headers)[0], 400)
+        self.assertEqual(self.request("/api/updates/cancel", {}, headers)[0], 200)
+        self.assertEqual(self.request("/api/settings", {"theme": "dark"}, headers)[0], 200)
+
     def test_bulk_import_endpoint_requires_token_and_forwards_batch_approval(self):
         body = {"id": "batch", "deck": "English", "approve_new_tags": True}
         self.assertEqual(self.request("/api/jobs/import-all", body)[0], 403)

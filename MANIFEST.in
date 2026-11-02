@@ -3,6 +3,7 @@ include THIRD_PARTY_NOTICES.md .env.example main.py run_ui.py run_import.py
 include run_desktop.py
 recursive-include tools *.py
 recursive-include tools *.ps1
+recursive-include tools *.cjs
 recursive-include packaging *.txt *.docx *.md *.spec *.iss *.ico
 recursive-include vocab_app/resources *
 recursive-include vocab_app/web *

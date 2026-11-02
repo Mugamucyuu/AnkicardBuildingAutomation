@@ -24,6 +24,7 @@ def main():
             'PYTHONPATH', 'PYTHONHOME', 'DEEPSEEK_API_KEY', 'OPENAI_API_KEY',
             'DEEPSEEK_SEARCH_API_KEY', 'ANKI_AI_PROVIDER', 'DEEPSEEK_MODEL', 'OPENAI_MODEL')}
         env['ANKICARD_DATA_DIR'] = str(args.state_directory.resolve() if args.state_directory else directory / 'state')
+        env['ANKICARD_DISABLE_UPDATE_CHECK'] = '1'
         env['PATH'] = str(Path(os.environ['SystemRoot']) / 'System32')
         result = subprocess.run([str(executable), '--smoke-test', str(report)],
                                 cwd=directory, env=env, timeout=120)

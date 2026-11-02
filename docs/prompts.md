@@ -1,6 +1,18 @@
 # Prompt inventory and transparency
 
-Every authored model instruction is file-backed. UI Prompt management keeps each type separate and supports TXT/MD upload, replacement, read-only inspection and restore. `validation.txt` contains JSON inside a text file so it uses the same upload/versioning workflow.
+Every authored model instruction is file-backed. UI Prompt management keeps each type separate and supports direct text editing, new prompts, TXT/MD import, versioned saves, explicit activation, deletion of custom versions and restore. `validation.txt` contains JSON inside a text file so it uses the same editing/versioning workflow.
+
+## Editing in the application
+
+1. Open **Prompts**, choose a type, then a file/version. Selecting a file opens it for editing; it does not change the active prompt.
+2. Type, select, copy/paste and undo/redo as in a normal text field. **Save version** or **Ctrl+S / Cmd+S** saves a custom version without changing defaults. Editing a built-in creates a custom version; the shipped original stays available.
+3. Choose **Use for new tasks**, or **Save & use for new tasks** when the editor has changes, to activate that version. The current active version is shown above the editor. Supplements are selected per batch on the import page instead.
+4. **New prompt** creates a blank draft in the chosen category. **Import file** accepts UTF-8 TXT/MD, up to 256,000 bytes, and opens the imported file immediately. Imports are not activated automatically.
+5. **Delete version** removes the selected custom file after confirmation. Deleting an active custom version restores the built-in for its stage. Older custom versions remain available until explicitly deleted. Built-in files cannot be deleted.
+
+Unsaved drafts stay in the editor when visiting other app pages or changing the UI language. Switching files/categories or importing another file asks before discarding changes. Browser reload/close and desktop exit warn about unsaved changes; drafts are not autosaved or restored after a crash. Saves retain immutable, content-addressed versions (identical filename/type/content reuses the same version). A hash check prevents a stale editor from saving over or deleting a file changed outside the application. Renaming the file before saving creates a separately named version.
+
+Saving validation rules checks their JSON structure before writing. Assembled instructions always show **active saved** prompts, not unsaved drafts. Existing and running jobs retain their own prompt snapshots even if the source custom file is later edited or deleted. Historical/uncategorized legacy files remain readable; import them into a supported category to edit/use them.
 
 | Type | Used when |
 | --- | --- |

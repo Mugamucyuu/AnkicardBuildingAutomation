@@ -1,5 +1,11 @@
 # Security and privacy
 
+Update checks contact only the official GitHub release endpoints. They send no prompts, jobs,
+collection data or model keys. Download/install are explicit actions; SHA-256 verification,
+restricted HTTPS redirects and local backups protect the update flow. The helper waits for
+the desktop and worker to exit before running Setup. Binaries remain unsigned; checksums
+do not substitute for signing against a compromised release account. See [updates](docs/updates.md).
+
 The UI binds to `127.0.0.1` only. Request-origin, host and per-process token checks protect API mutations. This is a single-user local application, not a public multi-user service; do not expose the port to a network or put it behind a public proxy.
 
 The Windows desktop shell uses the same boundary on an automatically selected port. It exposes no application JavaScript-to-Python API, starts a separate owned worker and stops it when the window closes or the host process exits. Do not run the desktop and browser editions simultaneously against the same data directory. Installer builds package selected source assets only; private state and credentials are excluded. The installer checks for WebView2 and installs the bundled Microsoft-signed runtime only if missing. Application/installer code signing is not yet configured.

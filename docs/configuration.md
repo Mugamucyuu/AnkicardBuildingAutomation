@@ -20,9 +20,24 @@ The Windows desktop installer starts the same UI in its own window, selects a fr
 
 ## User data
 
+In **Settings → Appearance**, choose **Paper & ink**, **Paper & moss**, **Soft iris**
+or **Graphite**, independently of **Light / Dark / Follow system**. Save settings
+to retain the selection. Follow system responds to OS appearance changes while
+the app is open. Existing light/dark preferences migrate automatically; the
+default palette is Soft iris. Graphite's night appearance uses Dark mode.
+
+The app bundles Inter, Manrope, Source Serif 4, Noto Sans SC and Noto Serif SC.
+Paper & moss uses serif headings with sans-serif controls; Soft iris uses
+Manrope for Latin text. Japanese/Korean glyphs not covered by the bundled fonts
+fall back to installed platform fonts. There are no runtime font downloads.
+App appearance does not restyle the generated Anki cards.
+
 The default is `%LOCALAPPDATA%\AnkicardBuildingAutomation` on Windows, and `$XDG_DATA_HOME/AnkicardBuildingAutomation` (fallback `~/.local/share/AnkicardBuildingAutomation`) elsewhere. The directory contains:
 
 - `settings.json`: public preferences only.
+- `data-version.json`: application/data-format compatibility metadata.
+- `backups/`: verified snapshots before upgrades/migrations; see [updates](updates.md).
+- `updates/`: staged installers and update results/logs.
 - `prompts/`: typed prompt uploads, versioned files and bindings.
 - `vocabulary/`: optional personal saved TXT/MD lists.
 - `tag_metadata.json`: optional descriptions of actual Anki tags.

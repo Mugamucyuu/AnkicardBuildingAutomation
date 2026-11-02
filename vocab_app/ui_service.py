@@ -18,6 +18,9 @@ from .providers import ModelClient, KEY_VARIABLES
 from .research import SOURCES
 from .settings import RESOURCE_ROOT, Settings, user_data_dir
 from .taxonomy import TagCatalog
+from . import __version__
+from .data_migrations import prepare_data
+from .updates import UpdateManager
 
 DEFAULT_CONCURRENCY = 4
 MAX_CONCURRENCY = 32
@@ -54,9 +57,11 @@ def parse_words(text):
 
 
 class UIService:
-    def __init__(self, directory=None, anki=None):
+    def __init__(self, directory=None, anki=None, *, desktop=False):
         self.directory = Path(directory or user_data_dir())
         self.directory.mkdir(parents=True, exist_ok=True)
+        prepare_data(self.directory, __version__)
+        self.updates = UpdateManager(self.directory, can_install=desktop)
         self.prompts = PromptStore(self.directory / "prompts")
         self.metadata_path = self.directory / "tag_metadata.json"
         self.anki = anki or AnkiClient(metadata_path=self.metadata_path)
@@ -67,7 +72,7 @@ class UIService:
         self.jobs = {}
         self.settings_path = self.directory / "settings.json"
         environment = Settings.from_env()
-        self.preferences = {"locale": "zh", "theme": "system", "provider": environment.provider, "model": environment.model or ("deepseek-flash" if environment.provider == "deepseek" else ""), "concurrency": DEFAULT_CONCURRENCY}
+        self.preferences = {"locale": "zh", "theme": "system", "palette": "iris", "auto_update_check": True, "provider": environment.provider, "model": environment.model or ("deepseek-flash" if environment.provider == "deepseek" else ""), "concurrency": DEFAULT_CONCURRENCY}
         if self.settings_path.exists():
             self.preferences.update(json.loads(self.settings_path.read_text(encoding="utf-8")))
         for path in (self.directory / "jobs").glob("*/job.json"):
@@ -82,12 +87,14 @@ class UIService:
                 job["bulk_import"]["status"] = "interrupted"
             self.jobs[job["id"]] = job
             self.save(job)
+        if desktop and self.preferences["auto_update_check"] and not os.getenv("ANKICARD_DISABLE_UPDATE_CHECK"):
+            self.updates.check()
 
     def save(self, job):
         write_json(self.directory / "jobs" / job["id"] / "job.json", job)
 
     def bootstrap(self):
-        return {"settings": self.preferences, "prompts": self.prompts.manifest(),
+        return {"settings": self.preferences, "prompts": self.prompts.manifest(), "updates": self.updates.status(),
                 "sources": SOURCES, "media_sources": MEDIA_SOURCES,
                 "vocabulary": sorted(self.vocabulary_files()),
                 "credentials": {p: bool(os.getenv(v)) for p, v in KEY_VARIABLES.items()},
@@ -97,6 +104,10 @@ class UIService:
         with self.lock:
             if data.get("locale", "zh") not in ("zh", "ja", "en") or data.get("theme", "system") not in ("system", "light", "dark"):
                 raise ValueError("界面语言或主题无效。")
+            if data.get("palette", self.preferences["palette"]) not in ("ink", "paper", "iris", "graphite"):
+                raise ValueError("配色方案无效。")
+            if type(data.get("auto_update_check", self.preferences["auto_update_check"])) is not bool:
+                raise ValueError("自动检查更新选项无效。")
             if data.get("provider", "deepseek") not in KEY_VARIABLES:
                 raise ValueError("请选择 DeepSeek 或 OpenAI。")
             if any(j["status"] in ("queued", "running") for j in self.jobs.values()) and data.get("keys"):
@@ -120,6 +131,16 @@ class UIService:
 
     def connection(self):
         return {"version": self.anki.invoke("version"), "decks": self.anki.invoke("deckNames")}
+
+    def request_update_install(self):
+        with self.lock:
+            busy = any(job["status"] in ("queued", "running") or
+                       job.get("bulk_import", {}).get("status") in ("queued", "running") or
+                       any(item["status"] == "importing" for item in job["items"])
+                       for job in self.jobs.values())
+            if busy:
+                raise ValueError("请等待生成和导入任务完成后再安装更新；下载的安装包会保留。")
+            return self.updates.request_install()
 
     def vocabulary(self, name):
         if name not in self.bootstrap()["vocabulary"]:

@@ -89,7 +89,7 @@ def serve(ready_path, parent_pid):
     from .ui_server import make_handler
     from .ui_service import UIService
     threading.Thread(target=watch_parent, args=(parent_pid, Path(ready_path).with_suffix('.stop')), daemon=True).start()
-    service = UIService()
+    service = UIService(desktop=bool(getattr(sys, "frozen", False)))
     server = ThreadingHTTPServer(("127.0.0.1", 0), make_handler(service, secrets.token_urlsafe(32)))
     ready = Path(ready_path)
     temporary = ready.with_suffix(".tmp")
@@ -134,11 +134,11 @@ class DesktopServer:
             time.sleep(.05)
         raise TimeoutError("The local service did not start in time.")
 
-    def request(self, path, data=None, token=None):
+    def request(self, path, data=None, token=None, timeout=10):
         headers = {"Content-Type": "application/json", "X-Vocab-Token": token} if data is not None else {}
         request = Request(self.url + path, data=json.dumps(data).encode() if data is not None else None, headers=headers)
         # Local IPC must not be sent through user/system HTTP proxies.
-        with build_opener(ProxyHandler({})).open(request, timeout=10) as response:
+        with build_opener(ProxyHandler({})).open(request, timeout=timeout) as response:
             return json.load(response)
 
     def close(self):
@@ -162,9 +162,24 @@ def smoke_check(window, server, report_path, loaded):
             raise TimeoutError("Desktop page did not load")
         assert window.evaluate_js("document.title") == "Vocabulary Studio"
         assert window.evaluate_js("Boolean(document.querySelector('#import-form'))")
+        deadline = time.monotonic() + 15
+        while time.monotonic() < deadline:
+            if window.evaluate_js("Boolean(document.querySelector('#prompt-text')?.value)"):
+                break
+            time.sleep(.1)
+        assert window.evaluate_js("document.querySelector('#prompt-text').tagName") == "TEXTAREA"
+        assert window.evaluate_js("document.querySelector('#prompt-text').value.length > 0")
+        assert window.evaluate_js("document.querySelectorAll('[data-palette-choice]').length") == 4
+        assert window.evaluate_js("document.fonts.size") == 5
+        from .settings import RESOURCE_ROOT
+        assert (RESOURCE_ROOT / "update/install-update.ps1").is_file()
+        assert window.evaluate_js("Boolean(document.querySelector('#version-current').textContent)")
         bootstrap = server.request("/api/bootstrap")
         assert not any(bootstrap["credentials"].values()), "Use a clean test environment"
         assert len(bootstrap["prompts"]["stages"]) == 11
+        server.request("/api/settings", {"palette": "paper", "theme": "dark"}, bootstrap["token"])
+        server.request("/api/prompts/save", {"name": "desktop-check.md", "type": "supplement",
+                                            "text": "Desktop smoke retained prompt."}, bootstrap["token"])
         for language, word in (("en", "apple"), ("ja", "猫"), ("ko", "나무")):
             job = server.request("/api/jobs", {"language": language, "text": word, "provider": "offline",
                                               "mode": "independent", "tag_source": "seed"}, bootstrap["token"])
@@ -212,25 +227,71 @@ def main(argv=None):
         url = server.start()
         window = webview.create_window(TITLE, url, width=1360, height=900, min_size=(960, 640),
                                        text_select=True, hidden=bool(args.smoke_test))
+        update_pending = threading.Event()
+        closed = threading.Event()
+        def cancel_update():
+            update_pending.clear()
+            try:
+                token = server.request("/api/bootstrap")["token"]
+                server.request("/api/updates/cancel", {}, token)
+            except (OSError, ValueError):
+                pass
         def closing():
             if args.smoke_test:
                 return True
+            if loaded.is_set():
+                try:
+                    dirty = window.evaluate_js("document.documentElement.dataset.promptDirty === 'true'")
+                    if dirty and not window.create_confirmation_dialog(TITLE,
+                            "提示词有未保存的修改或正在保存。仍要退出吗？\n"
+                            "A prompt has unsaved changes or is being saved. Exit anyway?"):
+                        cancel_update()
+                        return False
+                except Exception:
+                    # A crashed renderer must not prevent the application from closing.
+                    pass
             try:
                 busy = any(j["status"] in ("queued", "running") or
                            j.get("bulk_import", {}).get("status") in ("queued", "running") or
                            any(i["status"] == "importing" for i in j["items"])
                            for j in server.request("/api/jobs"))
                 if busy:
+                    if update_pending.is_set():
+                        cancel_update()
+                        return False
                     return window.create_confirmation_dialog(TITLE,
                         "任务仍在执行，退出将停止任务。下次打开可重试。是否退出？\n"
                         "Tasks are still running. Exit and retry unfinished items next time?")
             except (OSError, ValueError):
                 pass
+            if update_pending.is_set():
+                try:
+                    from .desktop_updates import launch_update
+                    token = server.request("/api/bootstrap")["token"]
+                    plan = server.request("/api/updates/prepare", {}, token, timeout=900)
+                    launch_update(plan, sys.executable, os.getpid(), server.process.pid)
+                except Exception:
+                    try:
+                        server.request("/api/updates/failed", {}, token)
+                    except Exception:
+                        pass
+                    update_pending.clear()
+                    return False
             return True
         window.events.closing += closing
+        window.events.closed += closed.set
         loaded = threading.Event()
         window.events.loaded += loaded.set
-        callback = (lambda: smoke_check(window, server, args.smoke_test, loaded)) if args.smoke_test else None
+        def watch_updates():
+            loaded.wait(45)
+            while not closed.wait(1):
+                try:
+                    if server.request("/api/updates")["state"] == "install_requested":
+                        update_pending.set()
+                        window.destroy()
+                except (OSError, ValueError):
+                    pass
+        callback = (lambda: smoke_check(window, server, args.smoke_test, loaded)) if args.smoke_test else watch_updates
         webview.start(callback, gui="edgechromium", private_mode=True,
                       storage_path=str(directory / "webview"))
         if args.smoke_test:

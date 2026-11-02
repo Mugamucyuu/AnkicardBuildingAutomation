@@ -3,12 +3,15 @@
 ```text
 vocab_app/
   desktop.py        Windows window, single-instance lock and owned worker lifecycle
+  desktop_updates.py verified installer handoff outside the installation directory
+  updates.py        official releases, bounded downloads, checksums and update state
+  data_migrations.py data schema versions and verified local backups
   ui_server.py      localhost HTTP boundary and request protection
   ui_service.py     persistent jobs, settings and reviewed import
   cli.py            offline/live CLI
   pipeline.py       media → research → generation → quality → tag audit
   providers.py      DeepSeek/OpenAI request adapters
-  prompts.py        typed prompt files and immutable batch snapshots
+  prompts.py        typed/versioned prompt files, editing/deletion and immutable batch snapshots
   taxonomy.py       starter + live Anki tag catalog, validation and proposals
   anki.py           additive deck/note-type setup, media upload and note import
   preview.py        escaped light/dark HTML and native Anki media markup

@@ -10,6 +10,17 @@ Application source code is licensed under MIT. That license does not relicense t
 - Attribution: The pitch accent notation was provided by Uros O. through the free Kanjium database.
 - Integrity, provenance and licensing links are recorded in `metadata.json` beside the data.
 
+## Bundled interface fonts
+
+Inter, Manrope, Source Serif 4, Noto Sans SC and Noto Serif SC are bundled for offline
+rendering under the **SIL Open Font License 1.1**. Each unmodified font's original
+copyright and license notice is retained in `vocab_app/web/fonts/*-OFL.txt`.
+The original binaries come from [Google Fonts](https://github.com/google/fonts)
+at revision `6c1dbe27dcf7d817d4b62cec033ba77fa8e2a5ec`; exact source URLs and SHA-256
+hashes are recorded in `vocab_app/web/fonts/sources.json`. `tools/vendor_fonts.py`
+reproduces these downloads. No fonts are fetched by the running application.
+The Windows distribution also includes these license texts in its consolidated notices.
+
 ## Windows desktop distribution
 
 The Windows installer also bundles CPython, pywebview, pythonnet, clr_loader, CFFI, pycparser, bottle, proxy_tools, typing_extensions and PyInstaller's bootloader. Their available license texts and version notices are consolidated into `_internal/THIRD_PARTY_LICENSES.txt` in the installed application. PyInstaller's license includes its bootloader exception. The pywebview package contains Microsoft's WebView2 SDK assemblies and native loader; their terms are preserved at `packaging/windows/licenses/webview2-sdk.txt` and in the consolidated installed notices. Native runtime notices for OpenSSL, libffi, bzip2, Expat, XZ, zlib and the Microsoft C runtime are preserved in `_internal/licenses/`; provenance is recorded in that directory's README.

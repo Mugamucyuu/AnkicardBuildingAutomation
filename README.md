@@ -6,14 +6,16 @@
 
 A local vocabulary workbench for **English, Japanese and Korean**. Generate structured learning cards, look up public pronunciation/media, review the result and import it into Anki.
 
-**Version 0.2.0 · Alpha.** Chinese, Japanese and English interface. [简体中文指南](docs/README.zh-CN.md) · [Windows installation](docs/windows.md) · [Configuration](docs/configuration.md) · [Architecture](docs/architecture.md) · [Changelog](CHANGELOG.md)
+**Version 0.3.0 · Alpha.** Chinese, Japanese and English interface. [简体中文指南](docs/README.zh-CN.md) · [Windows installation](docs/windows.md) · [Configuration](docs/configuration.md) · [Architecture](docs/architecture.md) · [Changelog](CHANGELOG.md)
 
 ## Features
 
 - Batch vocabulary from direct input, UTF-8 TXT/MD uploads or saved lists. Spaces inside phrases are preserved.
 - Three explanation modes: model knowledge, model-planned web research, or one/more selected dictionaries.
 - DeepSeek and OpenAI adapters with configurable model IDs. Card explanations use English for English, Japanese for Japanese and Simplified Chinese for Korean.
-- Separately managed prompt types: generation, three language styles, search/image planning, tag policy, auditing and repair. Upload TXT/MD replacements or append an explicitly selected supplement.
+- Four coordinated color palettes, light/dark/system appearance and bundled offline typography.
+- Current/latest version display and one-click Windows updates with verified downloads, local backups and retained data. Setup detects old installations automatically. See [updates](docs/updates.md).
+- Direct prompt editing, new prompts, TXT/MD import, versioned saves and custom-version deletion. Explicitly activate a version for new tasks or select a supplement per batch. See [prompt editing](docs/prompts.md).
 - English hierarchical tags merged from the starter catalog and your actual Anki tags. Required POS and Japanese/Korean origin checks, with review for proposed tags.
 - Public pronunciation/audio, Kanjium → OJAD → U-biq Japanese pitch, Korean phonetic Hangul and sense-aware Commons images. Missing/uncertain media stays absent and is reported.
 - Light/dark card previews, source attribution, persistent jobs, retry recovery and automatic or reviewed import.
@@ -30,9 +32,9 @@ A local vocabulary workbench for **English, Japanese and Korean**. Generate stru
 
 ### Windows desktop app (recommended for Windows users)
 
-Download `Ankicard-0.2.0-windows-x64-Setup.exe` from [GitHub Releases](https://github.com/Mugamucyuu/AnkicardBuildingAutomation/releases/latest), run Setup and open **Ankicard** from the desktop or Start menu. The existing UI opens in its own window. Setup automatically installs WebView2 if needed, including without an internet connection. Live generation still needs internet, a model API key and credit; Anki import still needs running Anki with AnkiConnect.
+Download `Ankicard-0.3.0-windows-x64-Setup.exe` from [GitHub Releases](https://github.com/Mugamucyuu/AnkicardBuildingAutomation/releases/latest), run Setup and open **Ankicard** from the desktop or Start menu. Setup automatically installs WebView2 if needed, including without an internet connection. Live generation still needs internet, a model API key and credit; Anki import still needs running Anki with AnkiConnect.
 
-Close the app before installing a newer version. Run the new installer to upgrade; user data is preserved. This release is unsigned and Windows may show a publisher/reputation prompt. See [Windows guide and build instructions](docs/windows.md).
+Use **Settings → Version & updates** for one-click updates, or close the app and run the new installer; it detects the previous installation and preserves user data. The first upgrade from 0.2.0 needs the new Setup. This release is unsigned and Windows may show a publisher/reputation prompt. See [Windows guide and build instructions](docs/windows.md).
 
 ### Source/browser edition
 
@@ -138,4 +140,4 @@ Automated tests use fixtures, fake providers/collections and temporary localhost
 
 ## License
 
-Application code: [MIT](LICENSE). Bundled Kanjium pitch data: **CC BY-SA 4.0**, with attribution and full license preserved. External media and dictionary material retain their own terms. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Application code: [MIT](LICENSE). Bundled Kanjium pitch data: **CC BY-SA 4.0**; bundled fonts: **SIL OFL 1.1**, with attribution and full licenses preserved. External media and dictionary material retain their own terms. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

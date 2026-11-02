@@ -48,6 +48,8 @@ def main():
     if not license_path:
         raise RuntimeError('CPython license not found')
     notices += ['\n=== CPython ===\n', license_path.read_text(encoding='utf-8')]
+    for item in sorted((ROOT / 'vocab_app/web/fonts').glob('*-OFL.txt')):
+        notices += [f'\n=== {item.stem} ===\n', item.read_text(encoding='utf-8')]
     for item in sorted((ROOT / 'packaging/windows/licenses').glob('*.txt')):
         if item.name != 'proxy_tools.txt':  # already recorded with the Python dependency
             notices += [f'\n=== {item.stem} ===\n', item.read_text(encoding='utf-8')]

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.0
+
+- Added current/latest version display, optional startup update checks and one-click Windows updates with checksum verification, a local-data backup and automatic relaunch.
+- Setup detects the previous installation directory and rejects detected downgrades. Data schema versioning migrates 0.2.x data additively after a verified backup.
+- Added real cross-version installer/helper/relaunch and data-preservation checks, including PowerShell environment isolation.
+
+- Added four coordinated palettes (Paper & ink, Paper & moss, Soft iris, Graphite), each with light/dark/system appearance, bundled offline fonts and persistent preferences.
+- Added an in-app plain-text prompt editor with new documents, native undo/redo, Ctrl/Cmd+S, imports, versioned saves, explicit activation and custom-version deletion.
+- Preserved shipped prompt originals and job snapshots; active-version deletion restores the stage default. Added dirty-draft warnings and stale-file checks.
+- Kept the existing Anki connection/tag error recovery fix from the latest local workbench.
+- Added real-browser workflow checks and font provenance/license verification; refreshed installer and contributor/user documentation.
+
 ## 0.2.0
 
 - Add a Windows x64 desktop application and single Setup executable. Bundle Python and the offline WebView2 runtime installer; keep the existing interface and features.

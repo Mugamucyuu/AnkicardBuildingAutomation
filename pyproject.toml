@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ankicard-building-automation"
-version = "0.2.0"
+version = "0.3.0"
 description = "A local multilingual vocabulary workbench for Anki"
 readme = "README.md"
 requires-python = ">=3.10"
-license = "MIT AND CC-BY-SA-4.0"
-license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md", "vocab_app/resources/data/pronunciation/kanjium/LICENSE.txt"]
+license = "MIT AND CC-BY-SA-4.0 AND OFL-1.1"
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md", "vocab_app/resources/data/pronunciation/kanjium/LICENSE.txt", "vocab_app/web/fonts/*-OFL.txt"]
 authors = [{name = "Mugamucyuu"}]
 dependencies = []
 classifiers = [
@@ -36,4 +36,4 @@ include = ["vocab_app*"]
 namespaces = false
 
 [tool.setuptools.package-data]
-vocab_app = ["web/*", "resources/prompts/*", "resources/examples/*.json", "resources/examples/vocabulary/*", "resources/data/tags/*", "resources/data/pronunciation/kanjium/*"]
+vocab_app = ["web/*", "web/fonts/*", "resources/update/*", "resources/prompts/*", "resources/examples/*.json", "resources/examples/vocabulary/*", "resources/data/tags/*", "resources/data/pronunciation/kanjium/*"]

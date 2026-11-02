@@ -33,53 +33,120 @@ uploadPrompt:["上传到当前类型","この種類にアップロード","Uploa
 extraPrompt:["本批附加说明（追加到主生成，可选）","追加指示（生成の末尾に追記・任意）","Batch supplement (appended to generation, optional)"],
 promptHint:["此处仅列出「附加说明」类型。主生成、三语风格等各自的 prompt 在「Prompt 管理」按类型选择和替换。","ここには追加指示だけを表示します。生成や各言語の文体は管理画面で種類ごとに選択・置換できます。","Only supplements are listed here. Choose and replace generation, language styles and other stages by type in Prompts."]
 });
+Object.assign(STR, {
+ colorPalette:["配色方案","カラーパレット","Color palette"],
+ paletteInk:["纸白墨蓝","ペーパーブルー","Paper & ink"],
+ palettePaper:["暖纸苔绿","紙と苔","Paper & moss"],
+ paletteIris:["雾紫","アイリス","Soft iris"],
+ paletteGraphite:["石墨夜色","グラファイト","Graphite"],
+ paletteHint:["配色与明暗模式可独立选择。暖纸苔绿使用宋体标题；其余采用无衬线字体。保存设置后，下次打开沿用。","配色と明暗は別々に設定できます。「紙と苔」は明朝体の見出しです。保存すると次回も適用されます。","Choose colors and light/dark mode separately. Paper & moss uses serif headings. Save settings to keep your choices."],
+ allPrompts:["直接编辑提示词，保存自己的版本，或导入 TXT / MD 文件。","直接編集してバージョンを保存、または TXT / MD を取り込みます。","Edit prompts directly, save versions, or import TXT / MD files."],
+ promptLibrary:["文件与版本","ファイル・バージョン","Files & versions"],
+ uploadPrompt:["导入文件","ファイルを取り込む","Import file"],
+ newPrompt:["新建提示词","新規プロンプト","New prompt"],
+ promptName:["文件名（TXT / MD）","ファイル名（TXT / MD）","File name (TXT / MD)"],
+ promptContent:["提示词正文","プロンプト本文","Prompt text"],
+ savePrompt:["保存新版本","新しいバージョンを保存","Save version"],
+ activatePrompt:["用于新任务","新規タスクに適用","Use for new tasks"],
+ saveAndActivate:["保存并用于新任务","保存して新規タスクに適用","Save & use for new tasks"],
+ deletePrompt:["删除此版本","このバージョンを削除","Delete version"],
+ builtinPrompt:["内置","内蔵","Built-in"],
+ customPrompt:["自定义","カスタム","Custom"],
+ activePrompt:["当前生效：","現在適用中：","Currently active:"],
+ builtinEditHint:["内置版本 · 可直接编辑，保存时创建自定义版本。","内蔵版：編集して保存するとカスタム版を作成します。","Built-in version. Editing and saving creates a custom version."],
+ promptUnsaved:["有未保存的修改","未保存の変更があります","Unsaved changes"],
+ promptSaved:["已保存","保存済み","Saved"],
+ promptWorking:["正在处理…","処理中…","Working…"],
+ promptLoading:["正在载入…","読み込み中…","Loading…"],
+ newDraft:["未保存的新提示词","未保存の新規プロンプト","New unsaved prompt"],
+ promptLines:["行","行","lines"],
+ promptCharacters:["字","文字","characters"],
+ discardPrompt:["有未保存的提示词修改。要放弃这些修改吗？","プロンプトに未保存の変更があります。変更を破棄しますか？","Discard unsaved prompt changes?"],
+ deletePromptConfirm:["删除这份自定义提示词版本？已有任务的快照会保留。","このカスタム版を削除しますか？既存タスクのスナップショットは保持されます。","Delete this custom version? Existing task snapshots are retained."],
+ deleteActivePrompt:["这份提示词正在使用。删除后将恢复该阶段的内置版本；已有任务不受影响。确定删除？","適用中のプロンプトです。削除すると内蔵版に戻ります。既存タスクには影響しません。削除しますか？","This version is active. Deleting it restores the built-in prompt for its stage. Existing tasks keep their snapshots. Delete?"],
+ promptVersionSaved:["已保存新版本。点击「用于新任务」可启用此版本。","新しいバージョンを保存しました。新規タスクへの適用を選択できます。","Version saved. Choose Use for new tasks to activate it."],
+ promptSupplementSaved:["附加说明已保存，可在「导入词汇」中为新批次选择。","追加指示を保存しました。語彙追加画面で新しいバッチに選択できます。","Supplement saved. Select it for a new batch on the import page."],
+ promptActivated:["已启用；仅影响之后创建的任务。","適用しました。以降の新規タスクにのみ反映されます。","Activated for newly created tasks."],
+ promptRestored:["已恢复内置版本。编辑区内容仍保留。","内蔵版に戻しました。編集中の内容は保持されます。","Built-in version restored. Editor contents are retained."],
+ promptDeleted:["已删除自定义版本。已有任务的提示词快照已保留。","カスタム版を削除しました。既存タスクのスナップショットは保持されています。","Custom version deleted. Existing task snapshots are retained."],
+ promptImported:["文件已导入。可继续编辑，或选择「用于新任务」。","取り込みました。編集を続けるか、新規タスクに適用できます。","File imported. Continue editing or use it for new tasks."],
+ supplementSelectHint:["附加说明在导入词汇页按批次选择。","追加指示は語彙追加画面でバッチごとに選択します。","Choose supplements per batch on the import page."],
+ promptSafety:["保存保留旧版本。启用后仅影响新任务，已有任务保留固定快照。内置版本可编辑另存，自定义版本可删除。重试模板中的 {issues} 占位符应保留。","保存時に旧版を保持します。適用は新規タスクのみで、既存タスクは固定スナップショットを使用します。内蔵版は編集して別途保存できます。修正テンプレートの {issues} は保持してください。","Saving retains older versions. Activation affects only new tasks; existing tasks keep their snapshots. Built-ins can be edited and saved as custom versions. Keep {issues} in repair templates."]
+});
 const batchDecks=new Map();
+Object.assign(STR, {
+ versionUpdates:["版本与更新","バージョンと更新","Version & updates"],
+ currentVersion:["当前版本","現在のバージョン","Current version"],
+ latestVersion:["最新版本","最新バージョン","Latest version"],
+ autoUpdateCheck:["启动时自动检查新版本（不自动安装）","起動時に更新を確認（自動インストールなし）","Check for updates at startup (never install automatically)"],
+ checkUpdates:["检查更新","更新を確認","Check for updates"],
+ updateNow:["一键更新","更新する","Update now"],
+ updateRestart:["安装并重启应用","インストールして再起動","Install & restart app"],
+ cancelDownload:["取消下载","ダウンロードを中止","Cancel download"],
+ releaseNotes:["发布说明","リリースノート","Release notes"],
+ updateUnknown:["尚未检查","未確認","Not checked"],
+ updateChecked:["上次检查：","最終確認：","Last checked:"],
+ updateHint:["更新前会校验安装包并备份用户数据，完成后重新打开应用。生成或导入任务执行期间不能安装更新。","検証とデータのバックアップ後に更新し、アプリを再起動します。生成・インポート中はインストールできません。","The installer is verified and user data backed up before updating. The app then restarts. Finish generation/import tasks before installation."],
+ updateSourceHint:["一键更新用于 Windows 安装版；源码或浏览器版请从发布页获取新版。","ワンクリック更新は Windows インストール版用です。ソース・ブラウザー版はリリースページをご利用ください。","One-click updates require the installed Windows app. Source/browser users can get updates from the release page."],
+ updateLastSuccess:["上次更新已完成","前回の更新が完了しました","Last update completed"],
+ updateLastFailure:["上次更新未完成；可重试或运行最新版安装包修复。备份保留在用户数据目录。","前回の更新が完了していません。再試行または最新版のセットアップで修復できます。バックアップは保持されています。","Last update did not complete. Retry or run the latest Setup to repair. Your data backup is retained."],
+ updateState_idle:["可联网检查官方新版本。","オンラインで公式更新を確認できます。","Check for an official release when online."],
+ updateState_checking:["正在检查新版本…","更新を確認中…","Checking for updates…"],
+ updateState_available:["有新版本可用。","新しいバージョンがあります。","An update is available."],
+ updateState_up_to_date:["当前版本已是最新，或比已发布版本更新。","最新、または公開版より新しいバージョンです。","You have the latest version or a newer development build."],
+ updateState_downloading:["正在下载安装包，可继续使用应用…","ダウンロード中。アプリは引き続き使えます…","Downloading. You can keep using the app…"],
+ updateState_ready:["安装包已校验，准备安装。","検証済み。インストールできます。","Installer verified and ready."],
+ updateState_install_requested:["准备更新，应用即将关闭并重新打开…","更新を準備中。アプリを再起動します…","Preparing to update and restart the app…"],
+ updateState_installing:["正在备份数据并准备安装，请稍候…","データのバックアップと準備中です…","Backing up data and preparing installation…"],
+ updateError_network:["无法连接更新服务。请检查网络后重试；当前应用可继续使用。","更新サービスに接続できません。ネットワークを確認してください。アプリは使用できます。","Cannot reach the update service. Check your connection and retry; the app remains usable."],
+ updateError_rate_limit:["更新服务暂时限流，请稍后重试。","更新サービスが一時的に制限されています。後で再試行してください。","The update service is rate limited. Try again later."],
+ updateError_verification:["发布信息或安装包校验失败，未执行安装。请重试。","リリース情報またはファイルの検証に失敗しました。インストールは行われていません。","Release metadata or installer verification failed. Nothing was installed. Retry."],
+ updateError_storage:["下载失败，请检查磁盘空间和目录权限后重试。","空き容量とフォルダーの権限を確認して再試行してください。","Download failed. Check free disk space and folder permissions, then retry."],
+ updateError_prepare_failed:["数据备份或安装准备失败，应用尚未关闭。请检查磁盘空间后重试。","バックアップまたは準備に失敗しました。アプリは開いたままです。空き容量をご確認ください。","Backup or preparation failed. The app remains open. Check free space and retry."],
+ updateError_install_failed:["更新程序未能启动，可重试或从发布页下载安装包。","更新プログラムを起動できません。再試行またはリリースページから入手してください。","The update helper could not start. Retry or download Setup from the release page."],
+ updateError_update_failed:["更新检查失败，可稍后重试。","更新の確認に失敗しました。後で再試行できます。","Update check failed. Try again later."]
+});
 let locale="zh", boot, jobs=[], entries=[], selectedTags=new Set(), currentPage="import", previewDark=false, ankiConnected=false, tagRequest=0;
 const t = key => (STR[key] || [key,key,key])[{zh:0,ja:1,en:2}[locale]];
 function el(tag, className, text){const e=document.createElement(tag);if(className)e.className=className;if(text!==undefined)e.textContent=text;return e;}
-function notify(message,error=false){$("notice").hidden=false;$("notice").dataset.key=Object.keys(STR).find(k=>STR[k].includes(message))||"";$("notice").textContent=message;$("notice").classList.toggle("error",error);}
+function notify(message,error=false,scope=""){const notice=$("notice");notice.hidden=false;notice.dataset.scope=scope;notice.dataset.key=Object.keys(STR).find(k=>STR[k].includes(message))||"";notice.textContent=message;notice.classList.toggle("error",error);}
+function clearNotice(scope){const notice=$("notice");if(notice.dataset.scope!==scope)return;notice.hidden=true;notice.textContent="";notice.dataset.key="";notice.dataset.scope="";notice.classList.remove("error");}
 async function api(path,data){const response=await fetch(path,data===undefined?{cache:"no-store"}:{method:"POST",headers:{"Content-Type":"application/json","X-Vocab-Token":boot.token},body:JSON.stringify(data)});const result=await response.json();if(!response.ok){throw new Error(locale==="zh"&&result.error?result.error:t("genericError"));}return result;}
-function translate(){document.documentElement.lang=locale;document.querySelectorAll("[data-i18n]").forEach(e=>e.textContent=t(e.dataset.i18n));document.querySelectorAll("[data-placeholder]").forEach(e=>e.placeholder=t(e.dataset.placeholder));$("anki-status").textContent=t(ankiConnected?"connected":"unchecked");if($("notice").dataset.key)$("notice").textContent=t($("notice").dataset.key);options($("vocabulary"),boot.vocabulary.map(v=>[v,v]),["",t("chooseFile")]);renderAudio();renderDictionaries();renderPrompts();renderJobs();renderTree();countWords();updateKeyStatus();}
-function theme(value){if(value==="system")delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=value;}
-function page(name){currentPage=name;document.querySelectorAll(".page").forEach(e=>e.hidden=e.id!=="page-"+name);document.querySelectorAll("[data-page]").forEach(e=>e.classList.toggle("active",e.dataset.page===name));if(name==="jobs")refreshJobs();if(name==="tags"&&!entries.length)loadTags(false);}
+function translate(){document.documentElement.lang=locale;document.querySelectorAll("[data-i18n]").forEach(e=>e.textContent=t(e.dataset.i18n));document.querySelectorAll("[data-placeholder]").forEach(e=>e.placeholder=t(e.dataset.placeholder));$("anki-status").textContent=t(ankiConnected?"connected":"unchecked");if($("notice").dataset.key)$("notice").textContent=t($("notice").dataset.key);options($("vocabulary"),boot.vocabulary.map(v=>[v,v]),["",t("chooseFile")]);renderAudio();renderDictionaries();renderPrompts();renderJobs();renderTree();countWords();updateKeyStatus();updatePanel.render();}
+const systemAppearance = window.matchMedia("(prefers-color-scheme: dark)");
+function theme(value, palette=$("palette").value||"iris"){
+ document.documentElement.dataset.theme=value==="system"?(systemAppearance.matches?"dark":"light"):value;
+ document.documentElement.dataset.palette=palette;
+ $("palette").value=palette;
+ document.querySelectorAll("[data-palette-choice]").forEach(button=>button.setAttribute("aria-pressed",String(button.dataset.paletteChoice===palette)));
+}
+systemAppearance.addEventListener("change",()=>{if($("theme").value==="system")theme("system");});
+document.querySelectorAll("[data-palette-choice]").forEach(button=>button.addEventListener("click",()=>theme($("theme").value,button.dataset.paletteChoice)));
+function page(name){if(currentPage!==name)window.scrollTo(0,0);currentPage=name;document.querySelectorAll(".page").forEach(e=>e.hidden=e.id!=="page-"+name);document.querySelectorAll("[data-page]").forEach(e=>e.classList.toggle("active",e.dataset.page===name));if(name==="jobs")refreshJobs();if(name==="tags"&&!entries.length)loadTags(false);}
 function options(select,items,first){const prior=select.value;select.replaceChildren();if(first)select.append(new Option(first[1],first[0]));items.forEach(([value,label])=>select.append(new Option(label,value)));if([...select.options].some(o=>o.value===prior))select.value=prior;}
 function renderAudio(){const lang=$("language").value;options($("audio"),[["auto",t("auto")],["none",t("disabled")],...Object.entries(boot.media_sources).filter(([id,s])=>!["none","commons"].includes(id)&&s.languages.includes(lang)).map(([id])=>[id,id])]);}
 function renderDictionaries(){const chosen=new Set([...document.querySelectorAll("#dictionaries input:checked")].map(e=>e.value));$("dictionaries").replaceChildren();Object.entries(boot.sources).filter(([,s])=>s.languages.includes($("language").value)).forEach(([id,s])=>{const label=el("label"),input=el("input");input.type="checkbox";input.value=id;input.checked=chosen.has(id);label.append(input,document.createTextNode(s.name));$("dictionaries").append(label);});}
 function modeChanged(){const mode=document.querySelector("[name=mode]:checked").value;$("dictionary-wrap").hidden=mode!=="sources";$("search-hint").hidden=mode==="independent";}
 function countWords(){const values=$("words").value.split(/[\n\r,，、]+/).map(w=>w.trim()).filter(w=>w&&!w.startsWith("#"));$("word-count").textContent=new Set(values).size+" "+t("wordCount");}
-async function connect(){try{const result=await api("/api/connection");ankiConnected=true;$("anki-status").textContent=t("connected");$("deck-options").replaceChildren(...result.decks.map(d=>new Option(d,d)));if(!$("deck").value)$("deck").value={en:"English",ja:"日本語",ko:"한국어"}[$("language").value];return true;}catch(e){ankiConnected=false;$("anki-status").textContent=t("unchecked");notify(e.message,true);return false;}}
+async function connect(){try{const result=await api("/api/connection");ankiConnected=true;$("anki-status").textContent=t("connected");$("deck-options").replaceChildren(...result.decks.map(d=>new Option(d,d)));if(!$("deck").value)$("deck").value={en:"English",ja:"日本語",ko:"한국어"}[$("language").value];clearNotice("connection");if($("notice").dataset.scope==="tags")await loadTags(false);return true;}catch(e){ankiConnected=false;$("anki-status").textContent=t("unchecked");notify(e.message,true,"connection");return false;}}
 async function readFile(file){if(!file||file.size>256000||!/[.](txt|md)$/i.test(file.name))throw new Error(t("fileTooLarge"));const text=new TextDecoder("utf-8",{fatal:true}).decode(await file.arrayBuffer());return text.replace(/^\uFEFF/,"");}
 function promptTypeLabel(type){return t(type==="generation"?"generationStage":type+"Stage");}
-function renderPrompts(){
- const manifest=boot.prompts;
- const fileOptions=type=>manifest.files.filter(f=>f.type===type).map(f=>[f.id,(f.builtin?"◦ ":"↳ ")+f.name]);
- options($("supplement"),fileOptions("supplement"),["",t("none")]);
- const types=(manifest.types||Object.keys(manifest.stages)).filter(type=>!["legacy","unclassified"].includes(type)||fileOptions(type).length);
- options($("prompt-type"),types.map(type=>[type,promptTypeLabel(type)]));
- const type=$("prompt-type").value, files=fileOptions(type), filename=manifest.stages[type];
- const changedType=$("prompt-reader").dataset.type!==type;
- options($("prompt-reader"),files);
- $("prompt-reader").dataset.type=type;
- if(changedType&&filename)$("prompt-reader").value=manifest.bindings[type]||"builtin/"+filename;
- $("prompt-reader").disabled=!files.length;
- $("prompt-stages").replaceChildren();
- $("upload-prompt-button").hidden=["legacy","unclassified"].includes(type);
- if(filename){
-  const row=el("div","prompt-row"),label=el("label"),title=el("span","",promptTypeLabel(type)),select=el("select");
-  select.dataset.stage=type;files.forEach(([id,name])=>select.append(new Option(name,id)));
-  select.value=manifest.bindings[type]||"builtin/"+filename;
-  select.addEventListener("change",async()=>{try{boot.prompts=await api("/api/prompts/bind",{stage:type,file:select.value});$("prompt-reader").value=select.value;await readPrompt();notify(t("saved"));}catch(e){notify(e.message,true);renderPrompts();}});
-  const restore=el("button","quiet",t("restore"));restore.type="button";
-  restore.addEventListener("click",async()=>{try{boot.prompts=await api("/api/prompts/bind",{stage:type,file:null});renderPrompts();$("prompt-reader").value="builtin/"+filename;await readPrompt();notify(t("saved"));}catch(e){notify(e.message,true);}});
-  label.append(title,select);row.append(label,restore);$("prompt-stages").append(row);
+const promptEditor = new PromptEditor({api, t, notify,
+ onManifest: manifest => {boot.prompts=manifest;renderPrompts();$("assembled-text").textContent="";}
+});
+const updatePanel = new UpdatePanel({api,t,notify,beforeInstall:()=>{
+ if(!promptEditor.discard())return false;
+ if(promptEditor.dirty()){
+  $("prompt-text").value=promptEditor.original;
+  $("prompt-name").value=promptEditor.originalName;
+  promptEditor.update();
  }
- readPrompt();
-}
-async function readPrompt(){
- const id=$("prompt-reader").value,type=$("prompt-type").value;
- if(!id){$("prompt-text").textContent=t("emptyPromptType");return;}
- $("prompt-text").textContent="";
- try{const result=await api("/api/prompt?id="+encodeURIComponent(id)+"&type="+encodeURIComponent(type));if($("prompt-reader").value===id&&$("prompt-type").value===type)$("prompt-text").textContent=result.text;}catch(e){notify(e.message,true);}
+ return true;
+}});
+window.addEventListener("online",()=>{if(boot?.updates.can_install&&boot.settings.auto_update_check)updatePanel.send('check');});
+function renderPrompts(){
+ options($("supplement"),boot.prompts.files.filter(f=>f.type==="supplement").map(f=>[f.id,f.display_name||f.name]),["",t("none")]);
+ promptEditor.render(boot.prompts);
 }
 function action(text,callback,className="secondary"){const b=el("button",className,text);b.type="button";b.addEventListener("click",async()=>{b.disabled=true;try{await callback();}catch(e){notify(e.message,true);}finally{b.disabled=false;}});return b;}
 async function refreshJobs(){try{const updated=await api("/api/jobs");if(JSON.stringify(updated)!==JSON.stringify(jobs)){jobs=updated;renderJobs();}}catch(e){notify(e.message,true);}}
@@ -94,7 +161,7 @@ head.append(info,actions);box.append(head);
 if(job.bulk_import){const b=job.bulk_import;box.append(el("p","meta",`${t("bulkImport")} · ${t(b.status)} · ${b.deck} · ${t("bulkImported")} ${b.imported}/${b.total} · ${t("bulkFailed")} ${b.failed} · ${t("bulkSkipped")} ${b.skipped}`));}const progress=el("div","progress"),bar=el("span");const complete=job.items.filter(i=>!["queued","generating"].includes(i.status)).length;bar.style.width=(100*complete/job.items.length)+"%";progress.append(bar);box.append(progress);job.items.forEach((item,index)=>{const row=el("div","job-item"),word=el("div"),buttons=el("div","actions");word.append(el("strong","",item.word));if(item.tags?.length)word.append(el("div","meta",item.tags.join(" · ")));if(item.note_id)word.append(el("div","meta",`${item.imported_deck} · #${item.note_id}`));if(item.error)word.append(el("div","meta error-text",locale==="zh"?item.error:t("genericError")));if(item.warnings?.length){const details=el("details","meta"),summary=el("summary","",t("media")+" · "+item.warnings.length);details.append(summary,el("p","",item.warnings.join("\n")));word.append(details);}if(item.proposals?.length&&!bulkActive){word.append(el("div","meta",item.proposals.map(p=>p.tag).join(" · ")));buttons.append(action(t("rejectProposals"),async()=>{await api("/api/jobs/reject-proposals",{id:job.id,index});await refreshJobs();}));buttons.append(action(t("approveProposals"),async()=>{await api("/api/jobs/approve-proposals",{id:job.id,index,deck:$("deck").value});await refreshJobs();}));}buttons.append(action(t("actualPrompts"),()=>showRequests(job.id,index)));if(item.preview)buttons.append(action(t("preview"),()=>showPreview(item)));if(!bulkActive&&["ready","import_failed","uncertain"].includes(item.status)&&job.config.provider!=="offline"&&!item.proposals?.length)buttons.append(action(t("importCard"),async()=>{await api("/api/jobs/import",{id:job.id,index,deck:$("deck").value});await refreshJobs();}));row.append(word,el("span","status",t(item.status)),buttons);box.append(row);});list.append(box);});}
 function showPreview(item){$("preview-title").textContent=item.word;$("preview-frame").src=item.preview;$("open-preview").href=item.preview;previewDark=document.documentElement.dataset.theme==="dark";$("preview-dialog").showModal();}
 $("preview-frame").addEventListener("load",()=>{const body=$("preview-frame").contentDocument?.body;if(body){body.classList.toggle("nightMode",previewDark);body.style.backgroundColor=previewDark?"#171c24":"#f5f7fa";}});
-async function loadTags(seed){const request=++tagRequest;try{const result=await api("/api/tags"+(seed?"?seed=1":""));if(request!==tagRequest)return;entries=result.entries;selectedTags.clear();if(seed)$("only-anki").checked=false;renderTree();}catch(e){if(request===tagRequest)notify(e.message,true);}}
+async function loadTags(seed){const request=++tagRequest;try{const result=await api("/api/tags"+(seed?"?seed=1":""));if(request!==tagRequest)return;entries=result.entries;selectedTags.clear();if(seed)$("only-anki").checked=false;renderTree();if(!seed)clearNotice("tags");}catch(e){if(request===tagRequest)notify(e.message,true,"tags");}}
 function renderTree(){const tree=$("tag-tree");tree.replaceChildren();const filter=$("tag-search").value.toLowerCase(),only=$("only-anki").checked;const nodes=new Map();entries.filter(e=>(!only||e.in_anki)&&(!filter||e.tag.toLowerCase().includes(filter))).forEach(e=>{const parts=e.tag.split("::");for(let i=1;i<=parts.length;i++){const tag=parts.slice(0,i).join("::");if(!nodes.has(tag))nodes.set(tag,{tag,children:[],entry:null});if(i===parts.length)nodes.get(tag).entry=e;}});for(const node of nodes.values()){const parent=node.tag.split("::").slice(0,-1).join("::");if(parent&&nodes.has(parent))nodes.get(parent).children.push(node);}function nodeEl(node){const row=el("span","tag-node"),e=node.entry;if(e?.in_anki){const check=el("input");check.type="checkbox";check.setAttribute("aria-label",node.tag);check.checked=selectedTags.has(node.tag);check.addEventListener("click",event=>event.stopPropagation());check.addEventListener("change",()=>{if(check.checked)selectedTags.add(node.tag);else selectedTags.delete(node.tag);summary();});row.append(check);}const text=el("span",e?.excluded?"tag-excluded":"",node.tag.split("::").at(-1));row.append(text);if(e)row.title=e.description;row.append(el("span","muted",e?.excluded?t("excluded"):e?.in_anki?t("existing"):t("seed")));if(node.children.length){const details=el("details"),head=el("summary");details.open=Boolean(filter)||node.tag.indexOf("::")===-1;head.append(row);details.append(head);node.children.sort((a,b)=>a.tag.localeCompare(b.tag)).forEach(c=>details.append(nodeEl(c)));return details;}const leaf=el("div","leaf");leaf.append(row);return leaf;}[...nodes.values()].filter(n=>!n.tag.includes("::")).sort((a,b)=>a.tag.localeCompare(b.tag)).forEach(n=>tree.append(nodeEl(n)));if(!nodes.size)tree.append(el("p","muted",t("noTags")));summary();function summary(){$("tag-summary").textContent=`${entries.filter(e=>e.in_anki).length} Anki · ${entries.length} ${t("tags")} · ${selectedTags.size} ✓`;}}
 function updateKeyStatus(){for(const p of ["deepseek","openai"])$(p+"-status").textContent=t(boot.credentials[p]?"configured":"notConfigured");}
 document.querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>page(b.dataset.page)));
@@ -104,8 +171,8 @@ $("vocabulary").addEventListener("change",async()=>{try{if($("vocabulary").value
 $("words-file").addEventListener("change",async e=>{try{$("words").value=await readFile(e.target.files[0]);countWords();}catch(error){notify(error.message||t("fileTooLarge"),true);}finally{e.target.value="";}});
 $("demo").addEventListener("click",()=>{$("provider").value="offline";$("model").value="fixture-v1";$("words").value={en:"apple",ja:"猫",ko:"나무"}[$("language").value];$("tag-source").value="seed";$("auto-import").checked=false;document.querySelector('[name=mode][value=independent]').checked=true;$("audio").value="none";$("image").value="none";modeChanged();countWords();notify(t("offlineHint"));});
 $("import-form").addEventListener("submit",async event=>{event.preventDefault();$("start").disabled=true;try{await api("/api/jobs",{text:$("words").value,language:$("language").value,provider:$("provider").value,model:$("model").value,mode:document.querySelector("[name=mode]:checked").value,sources:[...document.querySelectorAll("#dictionaries input:checked")].map(e=>e.value),deck:$("deck").value,tag_source:$("tag-source").value,audio:$("audio").value,image:$("image").value,auto_import:$("auto-import").checked,concurrency:Number($("concurrency").value),supplement:$("supplement").value||null});notify(t("started"));page("jobs");}catch(e){notify(e.message,true);}finally{$("start").disabled=false;}});
-$("refresh-jobs").addEventListener("click",refreshJobs);$("prompt-reader").addEventListener("change",readPrompt);
-$("prompt-type").addEventListener("change",renderPrompts);
+$("refresh-jobs").addEventListener("click",refreshJobs);
+
 function readablePromptInspection(data){
  const sections=[];
  for(const [name,value] of Object.entries(data)){
@@ -127,9 +194,8 @@ function readablePromptInspection(data){
 async function showRequests(id,index){try{$('requests-title').textContent=t('actualPrompts');$('requests-text').textContent=readablePromptInspection(await api('/api/jobs/prompts?id='+encodeURIComponent(id)+'&index='+index));$('requests-dialog').showModal();}catch(e){notify(e.message,true);}}
 $("show-instructions").addEventListener('click',async()=>{try{$('assembled-text').textContent=readablePromptInspection(await api('/api/prompts/preview?language='+$('inspection-language').value+'&images='+($('inspection-images').checked?'1':'0')));}catch(e){notify(e.message,true);}});
 $("close-requests").addEventListener('click',()=>$('requests-dialog').close());
-$("prompt-file").addEventListener("change",async event=>{const type=$("prompt-type").value;try{const file=event.target.files[0],text=await readFile(file);const result=await api("/api/prompts/upload",{name:file.name,text,type});boot.prompts=result.manifest;renderPrompts();$("prompt-type").value=type;renderPrompts();$("prompt-reader").value=result.id;readPrompt();notify(t("uploaded"));}catch(e){notify(e.message,true);}finally{event.target.value="";}});
 $("sync-tags").addEventListener("click",()=>loadTags(false));$("seed-tags").addEventListener("click",()=>loadTags(true));$("tag-search").addEventListener("input",renderTree);$("only-anki").addEventListener("change",renderTree);$("expand-tags").addEventListener("click",()=>document.querySelectorAll("#tag-tree details").forEach(d=>d.open=true));$("collapse-tags").addEventListener("click",()=>document.querySelectorAll("#tag-tree details").forEach(d=>d.open=false));$("browse-tags").addEventListener("click",async()=>{try{await api("/api/browse",{tags:[...selectedTags],match:$("tag-match").value});}catch(e){notify(e.message,true);}});
 $("locale").addEventListener("change",()=>{locale=$("locale").value;translate();});$("theme").addEventListener("change",()=>theme($("theme").value));
-$("settings-form").addEventListener("submit",async event=>{event.preventDefault();const keys={};for(const p of ["deepseek","openai","search"]){const input=$("key-"+p);if(input.value)keys[p]=input.value;}try{const updated=await api("/api/settings",{locale:$("locale").value,theme:$("theme").value,provider:$("default-provider").value,model:$("default-model").value,concurrency:Number($("default-concurrency").value),keys});boot={...boot,...updated};$("provider").value=boot.settings.provider;$("model").value=boot.settings.model;$("concurrency").value=boot.settings.concurrency;$("default-concurrency").value=boot.settings.concurrency;updateKeyStatus();notify(t("saved"));}catch(e){notify(e.message,true);}finally{for(const p of ["deepseek","openai","search"])$("key-"+p).value="";}});
+$("settings-form").addEventListener("submit",async event=>{event.preventDefault();const keys={};for(const p of ["deepseek","openai","search"]){const input=$("key-"+p);if(input.value)keys[p]=input.value;}try{const updated=await api("/api/settings",{locale:$("locale").value,theme:$("theme").value,palette:$("palette").value,auto_update_check:$("auto-update-check").checked,provider:$("default-provider").value,model:$("default-model").value,concurrency:Number($("default-concurrency").value),keys});boot={...boot,...updated};$("provider").value=boot.settings.provider;$("model").value=boot.settings.model;$("concurrency").value=boot.settings.concurrency;$("default-concurrency").value=boot.settings.concurrency;updateKeyStatus();notify(t("saved"));}catch(e){notify(e.message,true);}finally{for(const p of ["deepseek","openai","search"])$("key-"+p).value="";}});
 $("preview-theme").addEventListener("click",()=>{previewDark=!previewDark;const body=$("preview-frame").contentDocument?.body;if(body){body.classList.toggle("nightMode",previewDark);body.style.backgroundColor=previewDark?"#171c24":"#f5f7fa";}});$("close-preview").addEventListener("click",()=>$("preview-dialog").close());
-(async()=>{try{boot=await api("/api/bootstrap");locale=boot.settings.locale;$("locale").value=locale;$("theme").value=boot.settings.theme;theme(boot.settings.theme);$("default-provider").value=boot.settings.provider;$("default-model").value=boot.settings.model;$("provider").value=boot.settings.provider;$("model").value=boot.settings.model;$("concurrency").value=boot.settings.concurrency;$("default-concurrency").value=boot.settings.concurrency;options($("vocabulary"),boot.vocabulary.map(v=>[v,v]),["",t("chooseFile")]);translate();modeChanged();refreshJobs();setInterval(()=>{if(currentPage==="jobs")refreshJobs();},3000);}catch(e){notify(e.message,true);}})();
+(async()=>{try{boot=await api("/api/bootstrap");locale=boot.settings.locale;$("auto-update-check").checked=boot.settings.auto_update_check;updatePanel.render(boot.updates);$("locale").value=locale;$("theme").value=boot.settings.theme;theme(boot.settings.theme,boot.settings.palette||"iris");$("default-provider").value=boot.settings.provider;$("default-model").value=boot.settings.model;$("provider").value=boot.settings.provider;$("model").value=boot.settings.model;$("concurrency").value=boot.settings.concurrency;$("default-concurrency").value=boot.settings.concurrency;options($("vocabulary"),boot.vocabulary.map(v=>[v,v]),["",t("chooseFile")]);translate();modeChanged();refreshJobs();setInterval(()=>{if(currentPage==="jobs")refreshJobs();},3000);}catch(e){notify(e.message,true);}})();
