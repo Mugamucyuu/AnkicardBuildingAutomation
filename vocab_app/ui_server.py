@@ -58,6 +58,10 @@ def make_handler(service, token):
                     return self.respond(service.vocabulary(query.get("name", [""])[0]))
                 if path == "/api/prompt":
                     return self.respond({"text": service.prompts.read(query.get("id", [""])[0], query.get("type", [None])[0])})
+                if path == '/api/prompts/preview':
+                    return self.respond(service.prompt_preview(query.get('language',['en'])[0], images=query.get('images')==['1']))
+                if path == '/api/jobs/prompts':
+                    return self.respond(service.prompt_requests(query.get('id',[''])[0],int(query.get('index',['0'])[0])))
                 if path.startswith("/preview/"):
                     relative = path.removeprefix("/preview/")
                     parts = relative.split("/")
@@ -115,6 +119,8 @@ def make_handler(service, token):
                     result = {"ok": True}
                 elif path == "/api/jobs/import":
                     result = service.import_item(data["id"], int(data["index"]), data.get("deck"))
+                elif path == "/api/jobs/import-all":
+                    result = service.import_all(data["id"], data.get("deck"), data.get("approve_new_tags", False))
                 elif path == "/api/jobs/reject-proposals":
                     service.reject_proposals(data["id"], int(data["index"]))
                     result = {"ok": True}

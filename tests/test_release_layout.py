@@ -22,7 +22,7 @@ class ReleaseLayoutTests(unittest.TestCase):
     def test_resources_and_every_prompt_are_packaged_and_readable(self):
         self.assertTrue((RESOURCE_ROOT / "data/pronunciation/kanjium/LICENSE.txt").is_file())
         self.assertTrue((RESOURCE_ROOT / "examples/notes.json").is_file())
-        self.assertEqual(len(default_prompts()), 10)
+        self.assertEqual(len(default_prompts()), 11)
         self.assertTrue(all(text.strip() for text in default_prompts().values()))
 
     def test_writable_directory_can_be_overridden_without_source_tree_dependency(self):

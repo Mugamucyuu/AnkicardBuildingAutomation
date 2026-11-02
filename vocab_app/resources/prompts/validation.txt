@@ -1,0 +1,44 @@
+{
+  "rules": {
+    "minimum_examples": {
+      "en": 3,
+      "ja": 4,
+      "ko": 3
+    },
+    "check_language": true,
+    "check_japanese_forms": true,
+    "check_emphasis": true,
+    "max_bold_ratio": 0.65,
+    "check_paragraphs": true,
+    "check_collocations": true,
+    "minimum_collocation_length": 12
+  },
+  "messages": {
+    "quality_001": "senses[{v0}].examples[{v1}]: use a Korean example followed by a Simplified Chinese translation.",
+    "quality_002": "{v0}: write the explanation in Simplified Chinese, not Korean or English; Korean terms may appear inside Chinese prose. This applies to every generation mode.",
+    "quality_003": "{v0}: use Japanese prose and Japanese subheadings: 使用場面・語調 / 強調点 / 母語話者の印象; replace English comparison headings with ○○との違い. Quoted etymological source words are allowed.",
+    "quality_004": "Return a JSON object.",
+    "quality_005": "reading: provide the Japanese reading in kana.",
+    "quality_006": "alternative_forms: provide verified alternative spellings or 特になし; do not omit this field.",
+    "quality_007": "{v0}: missing explanation.",
+    "quality_008": "{v0}: add selective **bold** around key ideas inside the explanation.",
+    "quality_009": "{v0}: too much bold; emphasize short key ideas, not whole paragraphs.",
+    "quality_010": "{v0}: unmatched bold markers.",
+    "quality_011": "analysis must be an object.",
+    "quality_012": "analysis.{v0}: put each comparison or subheading in a separate paragraph, separated by two newlines.",
+    "quality_013": "senses[{v0}].tags: Japanese/Korean origin is mandatory; supply native, loanword or sino, or multiple origins for mixed components, with reasons. Do not infer from kanji alone.",
+    "quality_014": "analysis.collocations must be a nonempty array of {phrase, explanation} objects.",
+    "quality_015": "{v0}: must be an object.",
+    "quality_016": "{v0}.phrase: model must wrap the collocation itself in **bold**.",
+    "quality_017": "{v0}.explanation: provide 1–2 short sentences explaining meaning or typical use, not just a translation.",
+    "quality_018": "senses[{v0}]: provide at least {v1} examples.",
+    "quality_019": "Return valid JSON without Markdown fences.",
+    "quality_020": "Cite the supplied source IDs such as [S1] in relevant explanations; do not invent source IDs.",
+    "tag_021": "标签复核必须逐一覆盖所有词义。",
+    "tag_022": "标签复核词义 ID 缺失或重复。",
+    "tag_023": "复核只能使用允许的标签。",
+    "tag_024": "复核不能遗漏必填词性或日韩语源。",
+    "tag_025": "英语禁止语源标签。",
+    "tag_026": "每个修正后标签都必须有判断理由。"
+  }
+}

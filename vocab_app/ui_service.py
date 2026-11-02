@@ -19,6 +19,15 @@ from .research import SOURCES
 from .settings import RESOURCE_ROOT, Settings, user_data_dir
 from .taxonomy import TagCatalog
 
+DEFAULT_CONCURRENCY = 4
+MAX_CONCURRENCY = 32
+
+
+def validate_concurrency(value):
+    if type(value) is not int or not 1 <= value <= MAX_CONCURRENCY:
+        raise ValueError(f"并发数必须为 1–{MAX_CONCURRENCY} 的整数。")
+    return value
+
 
 def write_json(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -58,7 +67,7 @@ class UIService:
         self.jobs = {}
         self.settings_path = self.directory / "settings.json"
         environment = Settings.from_env()
-        self.preferences = {"locale": "zh", "theme": "system", "provider": environment.provider, "model": environment.model or ("deepseek-flash" if environment.provider == "deepseek" else "")}
+        self.preferences = {"locale": "zh", "theme": "system", "provider": environment.provider, "model": environment.model or ("deepseek-flash" if environment.provider == "deepseek" else ""), "concurrency": DEFAULT_CONCURRENCY}
         if self.settings_path.exists():
             self.preferences.update(json.loads(self.settings_path.read_text(encoding="utf-8")))
         for path in (self.directory / "jobs").glob("*/job.json"):
@@ -69,6 +78,8 @@ class UIService:
                 elif item["status"] == "importing":
                     item.update(status="uncertain", error="导入结果待核对；再次导入时先按 run_id 检查 Anki。")
             job["status"] = "complete"
+            if job.get("bulk_import", {}).get("status") in ("queued", "running"):
+                job["bulk_import"]["status"] = "interrupted"
             self.jobs[job["id"]] = job
             self.save(job)
 
@@ -94,6 +105,7 @@ class UIService:
             if not isinstance(keys, dict) or set(keys) - {"deepseek", "openai", "search"}:
                 raise ValueError("无效的密钥选项。")
             preferences = {k: data.get(k, self.preferences[k]) for k in self.preferences}
+            validate_concurrency(preferences["concurrency"])
             if not isinstance(preferences["model"], str) or len(preferences["model"]) > 120:
                 raise ValueError("模型 ID 无效。")
             for provider, key in keys.items():
@@ -126,6 +138,28 @@ class UIService:
             paths.update({p.name: p for p in directory.glob("*") if p.is_file() and p.suffix.lower() in (".txt", ".md")})
         return paths
 
+    def prompt_preview(self, language='en', word='example', images=False):
+        from .prompts import assemble_generation
+        if language not in ('en','ja','ko'):raise ValueError('语言无效。')
+        prompts=self.prompts.snapshot()
+        return {'generation':assemble_generation(prompts,language,images),
+                'search_planner':prompts['search_planner'],
+                'tag_review':prompts['tag_review']+'\n\n'+prompts['tag_policy'],
+                'content_repair':prompts['content_repair'],'tag_repair':prompts['tag_repair'],
+                'validation':json.loads(prompts['validation']),
+                'example_input':{'word':word,'language':language,**TagCatalog.load().prompt_context(language),'research':{'mode':'independent','sources':[],'queries':[]}},
+                'notice':'当前配置预览使用初始标签和空资料；真实标签、资料、附加说明和重试反馈以任务实际请求为准。'}
+
+    def prompt_requests(self, job_id, index):
+        with self.lock:
+            job=self.jobs[job_id]
+            if not 0 <= index < len(job['items']):raise ValueError('词卡不存在。')
+            root=self.directory/'jobs'/job_id
+            snapshot=json.loads((root/'prompts.json').read_text(encoding='utf-8'))
+            records=[json.loads(p.read_text(encoding='utf-8')) for p in sorted((root/'requests'/str(index)).glob('*.json'))]
+            return {'word':job['items'][index]['word'],'snapshot':snapshot,'requests':records,
+                    'notice':'旧任务可能只有模板快照，没有实际请求记录。记录不含密钥或 HTTP 认证头。'}
+
     def tags(self, seed=False):
         catalog = TagCatalog.load() if seed else TagCatalog.from_anki(self.anki, self.metadata_path)
         # Include every real Anki tag, even if excluded from AI assignment.
@@ -154,6 +188,7 @@ class UIService:
         words = parse_words(data.get("text", ""))
         if not words:
             raise ValueError("请先输入词汇。")
+        concurrency = validate_concurrency(data.get("concurrency", self.preferences["concurrency"]))
         provider, mode = data.get("provider"), data.get("mode")
         if provider not in (*KEY_VARIABLES, "offline") or mode not in ("independent", "web", "sources"):
             raise ValueError("模型来源或生成模式无效。")
@@ -193,7 +228,7 @@ class UIService:
         # Snapshot Anki once, before enqueueing or spending model tokens.
         catalog = TagCatalog.load() if provider == "offline" or data.get("tag_source") == "seed" else TagCatalog.from_anki(self.anki, self.metadata_path)
         config = {"language": language, "provider": provider, "model": data.get("model", ""), "mode": mode, "sources": sources,
-                  "audio": audio, "image": image, "deck": deck, "auto_import": bool(data.get("auto_import")), "tag_source": data.get("tag_source", "anki")}
+                  "audio": audio, "image": image, "deck": deck, "auto_import": bool(data.get("auto_import")), "tag_source": data.get("tag_source", "anki"), "concurrency": concurrency}
         job = {"id": uuid4().hex, "created": datetime.now(timezone.utc).isoformat(), "status": "queued", "cancel": False, "config": config,
                "items": [{"word": word, "status": "queued", "error": "", "note_id": None} for word in words]}
         root = self.directory / "jobs" / job["id"]
@@ -210,42 +245,61 @@ class UIService:
             item.update(values)
             self.save(job)
 
-    def run(self, job_id, prompts, catalog):
+    def _generate_item(self, job_id, index, prompts, catalog):
         from .examples import OfflineClient
         from .public_media import PublicMediaRegistry, download_assets
         job = self.jobs[job_id]
-        config = job["config"]
+        config, item = job["config"], job["items"][index]
         root = self.directory / "jobs" / job_id
+        with self.lock:
+            if job["cancel"]:
+                self._status(job, item, status="cancelled")
+                return
+            self._status(job, item, status="generating", error="")
+        try:
+            from .request_trace import recording_transport
+            model = OfflineClient() if config["provider"] == "offline" else ModelClient(Settings(config["provider"], config["model"]), recording_transport(root / 'requests' / str(index)))
+            pipeline = ImportPipeline(model, PublicMediaRegistry(), copy.deepcopy(catalog), prompts=prompts)
+            note = pipeline.generate(item["word"], config["language"], config["audio"], config["image"], config["mode"], config["sources"])
+            prefix = f"media/{index}"
+            for group in ("pronunciation", "images"):
+                note[group] = download_assets(MediaResult(**note[group]), root / prefix, relative_prefix=prefix).to_dict()
+            if config["language"] == "en" and config["audio"] == "auto" and not note["pronunciation"]["assets"]:
+                note["pronunciation"] = PublicMediaRegistry().english_audio(item["word"], root / prefix).to_dict()
+            # Publish flat media paths compatible with existing previews/imports.
+            for group in ("pronunciation", "images"):
+                for asset in note[group]["assets"]:
+                    filename = Path(asset["local_path"]).name
+                    target = root / "media" / f"{index}-{filename}"
+                    source = root / prefix / filename
+                    if source.exists():
+                        source.replace(target)
+                    asset["local_path"] = "media/" + target.name
+            write_json(root / f"{index}.json", note)
+            (root / f"{index}.html").write_text(render_preview(note), encoding="utf-8")
+            self._status(job, item, status="ready", tags=note["note_tags"], proposals=note.get("proposed_tags", []),
+                         warnings=note["pronunciation"]["warnings"] + note["images"]["warnings"],
+                         preview=f"/preview/{job_id}/{index}.html")
+            if config["auto_import"] and not job["cancel"] and not note.get("proposed_tags"):
+                self.import_item(job_id, index)
+        except Exception as error:
+            if item["status"] != "import_failed":
+                safe = re.sub(r"sk-[A-Za-z0-9_-]+", "[redacted]", str(error))[:1200] if isinstance(error, (ValueError, RuntimeError)) else ""
+                self._status(job, item, status="failed", error="生成失败。请检查网络、额度、prompt 格式或来源可用性，再重试。 " + safe)
+
+    def run(self, job_id, prompts, catalog):
+        job = self.jobs[job_id]
         with self.lock:
             job["status"] = "running"
             self.save(job)
         try:
-            model = OfflineClient() if config["provider"] == "offline" else ModelClient(Settings(config["provider"], config["model"]))
-            pipeline = ImportPipeline(model, PublicMediaRegistry(), catalog, prompts=prompts)
-            for index, item in enumerate(job["items"]):
-                if item["status"] != "queued":
-                    continue
-                if job["cancel"]:
-                    self._status(job, item, status="cancelled")
-                    continue
-                self._status(job, item, status="generating", error="")
-                try:
-                    note = pipeline.generate(item["word"], config["language"], config["audio"], config["image"], config["mode"], config["sources"])
-                    for group in ("pronunciation", "images"):
-                        note[group] = download_assets(MediaResult(**note[group]), root / "media").to_dict()
-                    if config["language"] == "en" and config["audio"] == "auto" and not note["pronunciation"]["assets"]:
-                        note["pronunciation"] = PublicMediaRegistry().english_audio(item["word"], root / "media").to_dict()
-                    write_json(root / f"{index}.json", note)
-                    (root / f"{index}.html").write_text(render_preview(note), encoding="utf-8")
-                    self._status(job, item, status="ready", tags=note["note_tags"], proposals=note.get("proposed_tags", []),
-                                 warnings=note["pronunciation"]["warnings"] + note["images"]["warnings"],
-                                 preview=f"/preview/{job_id}/{index}.html")
-                    if config["auto_import"] and not job["cancel"] and not note.get("proposed_tags"):
-                        self.import_item(job_id, index)
-                except Exception as error:
-                    if item["status"] != "import_failed":
-                        safe = re.sub(r"sk-[A-Za-z0-9_-]+", "[redacted]", str(error))[:1200] if isinstance(error, (ValueError, RuntimeError)) else ""
-                        self._status(job, item, status="failed", error="生成失败。请检查网络、额度、prompt 格式或来源可用性，再重试。 " + safe)
+            # Batches queue globally; each word owns clients, catalog and media.
+            concurrency = validate_concurrency(job["config"].get("concurrency", DEFAULT_CONCURRENCY))
+            with ThreadPoolExecutor(max_workers=concurrency, thread_name_prefix="vocab-word") as workers:
+                futures = [workers.submit(self._generate_item, job_id, index, prompts, catalog)
+                           for index, item in enumerate(job["items"]) if item["status"] == "queued"]
+                for future in futures:
+                    future.result()
         except Exception:
             for item in job["items"]:
                 if item["status"] in ("queued", "generating"):
@@ -258,7 +312,7 @@ class UIService:
     def retry(self, job_id):
         with self.lock:
             job = self.jobs[job_id]
-            if job["status"] in ("running", "queued"):
+            if job["status"] in ("running", "queued") or job.get("bulk_import", {}).get("status") in ("queued", "running"):
                 raise ValueError("任务仍在运行。")
             root = self.directory / "jobs" / job_id
             saved = json.loads((root / "catalog.json").read_text(encoding="utf-8"))
@@ -277,6 +331,62 @@ class UIService:
         with self.lock:
             self.jobs[job_id]["cancel"] = True
             self.save(self.jobs[job_id])
+
+    def import_all(self, job_id, deck=None, approve_new_tags=False):
+        with self.lock:
+            job = self.jobs[job_id]
+            if job["status"] in ("queued", "running"):
+                raise ValueError("请等本批生成结束后再全部导入。")
+            if job["config"]["provider"] == "offline":
+                raise ValueError("离线演示不能导入 Anki。")
+            if type(approve_new_tags) is not bool:
+                raise ValueError("新标签批准选项无效。")
+            selected = deck or job["config"].get("deck", "")
+            if not isinstance(selected, str) or not selected.strip() or len(selected) > 200:
+                raise ValueError("请选择目标牌组。")
+            if job.get("bulk_import", {}).get("status") in ("queued", "running"):
+                return copy.deepcopy(job["bulk_import"])
+            indices = [i for i, item in enumerate(job["items"])
+                       if not item.get("note_id") and item["status"] in ("ready", "import_failed", "uncertain")]
+            if not indices:
+                raise ValueError("没有待导入的词卡。")
+            if not approve_new_tags and any(job["items"][i].get("proposals") for i in indices):
+                raise ValueError("本批含新标签，请选择一并批准新标签后全部导入。")
+            job["bulk_import"] = {"status": "queued", "total": len(indices), "imported": 0, "failed": 0,
+                                  "skipped": len(job["items"]) - len(indices), "deck": selected}
+            self.save(job)
+            self.pool.submit(self._import_all, job_id, indices, selected, approve_new_tags)
+            return copy.deepcopy(job["bulk_import"])
+
+    def _import_all(self, job_id, indices, deck, approve_new_tags):
+        job = self.jobs[job_id]
+        with self.lock:
+            job["bulk_import"]["status"] = "running"
+            self.save(job)
+        try:
+            for index in indices:
+                try:
+                    with self.lock:
+                        item = job["items"][index]
+                        if item.get("note_id"):
+                            job["bulk_import"]["skipped"] += 1
+                        else:
+                            if item.get("proposals") and approve_new_tags:
+                                self.approve_proposals(job_id, index, deck)
+                            else:
+                                self.import_item(job_id, index, deck)
+                            job["bulk_import"]["imported"] += 1
+                        self.save(job)
+                except Exception:
+                    with self.lock:
+                        job["bulk_import"]["failed"] += 1
+                        if item["status"] != "import_failed":
+                            self._status(job, item, status="import_failed", error="批量导入失败，请检查标签、Anki 连接和目标牌组后重试。")
+                        self.save(job)
+        finally:
+            with self.lock:
+                job["bulk_import"]["status"] = "complete"
+                self.save(job)
 
     def import_item(self, job_id, index, deck=None):
         # Serial import and run-id recovery prevent double-click/restart duplicates.
@@ -346,7 +456,7 @@ class UIService:
             if index < 0 or index >= len(job["items"]):
                 raise ValueError("词卡不存在。")
             item = job["items"][index]
-            if item["status"] not in ("ready", "import_failed"):
+            if item["status"] not in ("ready", "import_failed", "uncertain"):
                 raise ValueError("只能审核待导入的词卡。")
             root = self.directory / "jobs" / job_id
             path = root / f"{index}.json"

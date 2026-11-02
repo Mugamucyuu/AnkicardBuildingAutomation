@@ -52,7 +52,8 @@ def main(argv=None):
         parser.error("--import-preview 必须配合 --import-anki 使用。")
     words = args.word or [{"en": "apple", "ja": "猫", "ko": "나무"}[args.language]]
     try:
-        client = ModelClient(Settings.from_env(args.provider, args.model)) if args.live else OfflineClient()
+        from .request_trace import recording_transport
+        client = ModelClient(Settings.from_env(args.provider, args.model), recording_transport(args.output_dir / 'requests')) if args.live else OfflineClient()
         if args.live:
             client.settings.require_model()
         from vocab_app.public_media import PublicMediaRegistry, download_assets

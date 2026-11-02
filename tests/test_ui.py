@@ -51,10 +51,10 @@ class UIServiceTests(unittest.TestCase):
         store = self.service.prompts
         before = store.snapshot()
         for stage in DEFAULTS:
-            file_id = store.upload("my.md", "Custom instructions", stage)
+            file_id = store.upload("my.md", before[stage] if stage=='validation' else "Custom instructions", stage)
             store.bind(stage, file_id)
         after = store.snapshot()
-        self.assertTrue(all(v == "Custom instructions" for v in after.values()))
+        self.assertTrue(all(v == "Custom instructions" for k,v in after.items() if k!='validation'))
         self.assertNotEqual(before["generation"], after["generation"])
         store.bind("generation", None)
         self.assertEqual(store.snapshot()["generation"], before["generation"])
@@ -215,6 +215,16 @@ class UIHTTPTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertIn(b"apple", preview)
         self.assertEqual(self.request(f"/preview/{job_id}/prompts.json")[0], 404)
+
+    def test_bulk_import_endpoint_requires_token_and_forwards_batch_approval(self):
+        body = {"id": "batch", "deck": "English", "approve_new_tags": True}
+        self.assertEqual(self.request("/api/jobs/import-all", body)[0], 403)
+        with patch.object(self.service, "import_all", return_value={"status": "queued", "total": 2}) as bulk:
+            status, response = self.request("/api/jobs/import-all", body,
+                {"Content-Type": "application/json", "X-Vocab-Token": "test-token"})
+        self.assertEqual(status, 200)
+        self.assertEqual(json.loads(response)["total"], 2)
+        bulk.assert_called_once_with("batch", "English", True)
 
 
 if __name__ == "__main__":

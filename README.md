@@ -6,7 +6,7 @@
 
 A local vocabulary workbench for **English, Japanese and Korean**. Generate structured learning cards, look up public pronunciation/media, review the result and import it into Anki.
 
-**Version 0.1.1 · Alpha.** Chinese, Japanese and English interface. [简体中文指南](docs/README.zh-CN.md) · [Configuration](docs/configuration.md) · [Architecture](docs/architecture.md) · [Changelog](CHANGELOG.md)
+**Version 0.2.0 · Alpha.** Chinese, Japanese and English interface. [简体中文指南](docs/README.zh-CN.md) · [Windows installation](docs/windows.md) · [Configuration](docs/configuration.md) · [Architecture](docs/architecture.md) · [Changelog](CHANGELOG.md)
 
 ## Features
 
@@ -21,11 +21,20 @@ A local vocabulary workbench for **English, Japanese and Korean**. Generate stru
 
 ## Requirements
 
-- **Python 3.10+** and a modern browser. Runtime application code has no third-party Python dependencies.
+- **Windows installer:** Windows 10 (1809+) or Windows 11, x64. Python and the WebView2 offline installer are included. No Python installation, terminal commands or localhost address entry is needed.
+- **Source/browser edition:** Python 3.10+ and a modern browser. The core/browser edition uses only the standard library; the desktop shell adds pywebview and its dependencies.
 - For Anki import: desktop **Anki with AnkiConnect API v6 enabled and running**. Anki's installation drive does not matter. AnkiWeb and mobile Anki alone cannot provide the local API.
 - For live generation: a provider API key, access to a supported model ID, internet connectivity and available API credit. Research currently uses DeepSeek Search, including when OpenAI generates the card.
 
 ## Install and run
+
+### Windows desktop app (recommended for Windows users)
+
+Download `Ankicard-0.2.0-windows-x64-Setup.exe` from [GitHub Releases](https://github.com/Mugamucyuu/AnkicardBuildingAutomation/releases/latest), run Setup and open **Ankicard** from the desktop or Start menu. The existing UI opens in its own window. Setup automatically installs WebView2 if needed, including without an internet connection. Live generation still needs internet, a model API key and credit; Anki import still needs running Anki with AnkiConnect.
+
+Close the app before installing a newer version. Run the new installer to upgrade; user data is preserved. This release is unsigned and Windows may show a publisher/reputation prompt. See [Windows guide and build instructions](docs/windows.md).
+
+### Source/browser edition
 
 ```sh
 git clone https://github.com/Mugamucyuu/AnkicardBuildingAutomation.git
@@ -63,7 +72,7 @@ Click **Try offline demo**, then **Generate cards**. Change vocabulary language 
 1. In Anki, open **Tools → Add-ons → Get Add-ons** and enter **2055492159** ([AnkiConnect](https://ankiweb.net/shared/info/2055492159)). Restart Anki and keep it running.
 2. In the web UI, click **Connect Anki**.
 3. Choose an existing destination deck or enter a new deck name. Set your provider/model/key in **Settings**.
-4. Enter words, choose a generation mode and generate previews. Review them and click **Import into Anki**, or explicitly enable automatic import.
+4. Enter words, choose a generation mode and concurrency (default **4**, adjustable **1–32**) and generate previews. After generation, click **Import all into Anki** for the batch, import individual cards, or explicitly enable automatic import. The batch button explicitly approves proposed new tags together when present.
 
 **No pre-existing vocabulary, tags, decks or `AI-note` type is required.** An empty collection uses the bundled starter tags. On import, the application creates the destination deck if missing and provisions its own `Ankicard Vocabulary v1` note type. A conflicting incompatible note type is left untouched and a separate suffixed type is used. Existing notes, templates, decks, tags and review history are not migrated or overwritten. Normal Anki duplicate checks are enabled; they are note-type scoped.
 
@@ -120,7 +129,7 @@ Automated tests use fixtures, fake providers/collections and temporary localhost
 
 ## Current limits
 
-- A batch has one vocabulary language; execution is currently serial.
+- A batch has one vocabulary language. Words run concurrently (default 4; UI range 1–32); batches queue in order and Anki writes remain serial.
 - TXT/MD input only; no PDF/Word/OCR parser.
 - Tag combinations open the Anki browser; automatic filtered-deck creation/review is not implemented.
 - No automatic migration of old collections or bulk rewriting of existing cards.

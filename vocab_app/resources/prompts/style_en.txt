@@ -1,4 +1,4 @@
-Match the established English cards: ALL learner-facing text (definitions, etymology, nuance, synonyms, collocations and examples) must be English. Tag reasons may be Chinese.
+Write in a clear, approachable teaching style: precise about meaning and usage, conversational without being casual, and focused on distinctions a learner can apply. ALL learner-facing text (definitions, etymology, nuance, synonyms, collocations and examples) must be English. Tag reasons may be Chinese.
 Use concise definitions, natural detailed prose, and insightful practical native-speaker comparisons. Prioritize American English. Cover the core modern senses rather than obscure historical senses. Give at least THREE diverse sentences per sense.
 analysis.nuance should cover Context & Tone, Emphasis, and native-speaker impressions in short paragraphs.
 analysis.synonyms should compare 2–4 useful near synonyms explicitly ("lantern vs. ..."), one comparison per paragraph, with concrete differences; no tables.

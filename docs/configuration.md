@@ -1,6 +1,10 @@
 # Configuration
 
+Prompt instructions, content checks and feedback are documented in the [complete prompt inventory](prompts.md). The UI offers assembled-instruction previews and per-word actual model requests. New live jobs store their provider JSON request bodies under `jobs/<job-id>/requests/<word-index>/`; these records contain vocabulary, tags and research text, so keep them private. Authentication headers and API credentials are excluded. Older jobs without request records are identified explicitly.
+
 The UI runs on `http://127.0.0.1:8877` by default. `ankicard --help` documents launch options.
+
+The Windows desktop installer starts the same UI in its own window, selects a free internal port automatically and stops its service when the window closes. No address or port configuration is needed. Its data directory and credential policy are the same as the browser edition. See [Windows installation](windows.md).
 
 | Environment variable | Purpose |
 | --- | --- |
@@ -25,6 +29,12 @@ The default is `%LOCALAPPDATA%\AnkicardBuildingAutomation` on Windows, and `$XDG
 - `jobs/`: generated JSON/HTML, downloaded media, prompt/tag snapshots and import receipts.
 
 Each job fixes its prompt/catalog snapshot. Stops affect subsequent words; an already-sent model request may complete. Restarts retain results and mark unfinished generation for manual retry. Uncertain imports are reconciled using the unique run ID before trying another add. Offline fixtures cannot be imported.
+
+## Parallel generation and batch import
+
+The generation form accepts **1–32** concurrent words, default **4**. Save a default in Settings, or override it for one batch; running jobs retain their saved value. This is a conservative local default rather than a provider quota. [DeepSeek's concurrency limits](https://api-docs.deepseek.com/quick_start/rate_limit/) apply to the entire provider account; search and media services may have separate limits. Choose 1 for serial generation or lower the value if sources are throttled. Batches queue in order, so their concurrency does not multiply. Stop prevents queued words from starting; in-flight words may finish.
+
+After a batch stops or completes, choose its destination deck in Activity and click **Import all into Anki**. If there are proposed tags, **Approve new tags & import all** approves them together; schema and tag validation still apply. Imports run serially in the background and show imported, failed and skipped counts. Failures do not stop later cards. Already imported cards and unsuccessful generations are skipped; use the button again to retry remaining imports without regeneration. After a restart, interrupted imports reconcile their run IDs before adding anything. Offline demo cards cannot be imported.
 
 Custom metadata example:
 

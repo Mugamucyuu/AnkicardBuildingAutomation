@@ -4,7 +4,7 @@ Please open an issue describing the problem or proposed change before a large re
 
 ## Development
 
-Python 3.10+ is required. The application uses the Python standard library at runtime.
+Python 3.10+ is required for the core/browser edition, which uses the standard library at runtime. The optional Windows desktop shell uses pywebview; installer builds use CPython 3.12 x64 and the pinned toolchain described in [Windows distribution](docs/windows.md).
 
 ```sh
 python -m venv .venv

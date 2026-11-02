@@ -12,6 +12,7 @@ DEFAULTS = {
     "search_planner": "search_planner.txt", "tag_review": "tag_review.txt",
     "content_repair": "content_repair.txt", "tag_repair": "tag_repair.txt",
     "image_plan": "image_plan.txt",
+    "validation": "validation.txt",
 }
 FILE_TYPES = (*DEFAULTS, "supplement", "legacy", "unclassified")
 
@@ -81,6 +82,9 @@ class PromptStore:
             raise ValueError("未知 prompt 阶段。")
         if file_id:
             self.read(file_id, stage)
+            if stage == 'validation':
+                from .validation import parse_validation
+                parse_validation(self.read(file_id, stage))
         bindings = self.bindings()
         if file_id:
             bindings[stage] = file_id
@@ -98,6 +102,8 @@ class PromptStore:
         result = {stage: self.read(bindings.get(stage) or "builtin/" + name, stage) for stage, name in DEFAULTS.items()}
         if supplement:
             result["generation"] += "\n\n" + self.read(supplement, "supplement")
+        from .validation import parse_validation
+        parse_validation(result['validation'])
         return result
 
     def manifest(self):
@@ -106,3 +112,7 @@ class PromptStore:
 def default_prompts():
     # CLI always uses shipped files; UI bindings are explicit and do not affect it.
     return {stage: (RESOURCE_ROOT / "prompts" / name).read_text(encoding="utf-8") for stage, name in DEFAULTS.items()}
+
+def assemble_generation(prompts, language, images=False):
+    text=prompts['generation']+'\n\n'+prompts['tag_policy']+'\n\n'+prompts['style_'+language]
+    return text+'\n\n'+prompts['image_plan'] if images else text

@@ -36,7 +36,7 @@ class ImageSelectionTests(unittest.TestCase):
         self.assertEqual(result.selection['selected_title'], 'File:Milk curds.jpg')
         self.assertEqual(result.selection['sense_id'], 's1')
         self.assertNotIn('File:Lemon curd.jpg', [a['title'] for a in result.selection['approved_assets']])
-        self.assertEqual(registry.image_search.call_count, 1)
+        self.assertEqual(registry.image_search.call_count, 2)
 
     def test_rejects_missing_subject_and_substring_match(self):
         for asset in (picture('Food.jpg', 'a bowl of milk'), picture('Curdle-logo.png', 'curdle software')):
@@ -80,7 +80,7 @@ class ImageSelectionTests(unittest.TestCase):
         registry.representative_image.return_value = [asset]
         result = select_image(registry,'curd','en',SENSES,{**PLAN,'topic':'Curd'})
         self.assertEqual(result.selection['selected_title'], asset['title'])
-        registry.image_search.assert_not_called()
+        self.assertTrue(registry.image_search.called)
         wrong = picture('Circle.jpg', representative_article={'title':'Squatting','extract':'Occupying an abandoned building.'})
         self.assertLess(rank_candidate(wrong,{'anchors':['squatting'],'context':['posture'],'query':'person squatting','exclude':[]})[0],5)
 

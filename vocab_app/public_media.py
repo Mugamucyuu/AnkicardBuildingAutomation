@@ -4,12 +4,15 @@ import html
 import json
 import re
 import time
+import threading
 from pathlib import Path
 from urllib.parse import urlencode, quote, urlparse
 from urllib.request import Request, urlopen
 from .media import MediaResult, MediaRegistry
 
-AGENT = "VocabularyCardPrototype/0.2 (personal vocabulary study; low volume)"
+AGENT = "AnkicardBuildingAutomation/0.1 (+https://github.com/Mugamucyuu/AnkicardBuildingAutomation)"
+_api_lock = threading.Lock()
+_last_api_request = 0.0
 
 def fetch(url, binary=False):
     if urlparse(url).scheme != "https":
@@ -19,15 +22,27 @@ def fetch(url, binary=False):
             with urlopen(Request(url, headers={"User-Agent": AGENT}), timeout=30) as response:
                 content = response.read(12_000_001)
             break
-        except Exception:
+        except Exception as error:
+            from urllib.error import HTTPError
+            if isinstance(error, HTTPError) and error.code not in (408, 429, 500, 502, 503, 504):
+                raise
             if attempt:
                 raise
-            time.sleep(1)
+            retry_after = error.headers.get('Retry-After', '') if isinstance(error, HTTPError) else ''
+            if retry_after.isdigit() and int(retry_after) > 30:
+                raise
+            time.sleep(int(retry_after) if retry_after.isdigit() else 2)
     if len(content) > 12_000_000:
         raise ValueError("媒体文件过大。")
     return content if binary else content.decode("utf-8")
 
 def api(host, **params):
+    global _last_api_request
+    with _api_lock:
+        delay = 1.2 - (time.monotonic() - _last_api_request)
+        if delay > 0:
+            time.sleep(delay)
+        _last_api_request = time.monotonic()
     return json.loads(fetch("https://" + host + "/w/api.php?" + urlencode({"format":"json", **params})))
 
 def plain(text):
@@ -35,7 +50,7 @@ def plain(text):
 
 def commons_metadata(title):
     data = api("commons.wikimedia.org", action="query", titles=title,
-               prop="imageinfo", iiprop="url|size|extmetadata", iiurlwidth=900)
+               prop="imageinfo", iiprop="url|size|mime|extmetadata", iiurlwidth=900)
     page = next(iter(data["query"]["pages"].values()))
     info = page["imageinfo"][0]
     meta = info.get("extmetadata", {})
@@ -46,6 +61,7 @@ def commons_metadata(title):
         "license_url": meta.get("LicenseUrl", {}).get("value", ""),
         "description": plain(meta.get("ImageDescription", {}).get("value", "")),
         "title": title, "width": info.get("width", 0), "height": info.get("height", 0),
+        "original_mime": info.get('mime', ''),
     }
 
 class PublicMediaRegistry(MediaRegistry):
@@ -162,7 +178,7 @@ class PublicMediaRegistry(MediaRegistry):
     def image_search(self, query, limit=6):
         """Fetch a small search result AND ranking/credit metadata in one API call."""
         data = api('commons.wikimedia.org', action='query', generator='search',
-                   gsrsearch=query, gsrnamespace=6, gsrlimit=min(limit, 6),
+                   gsrsearch=query, gsrnamespace=6, gsrlimit=min(limit, 8),
                    prop='imageinfo', iiprop='url|size|mime|extmetadata', iiurlwidth=900,
                    iiextmetadatafilter='Artist|LicenseShortName|LicenseUrl|ImageDescription',
                    iiextmetadatalanguage='en')
@@ -174,6 +190,7 @@ class PublicMediaRegistry(MediaRegistry):
                            'url': info.get('thumburl') or info.get('url', ''),
                            'source_page': info.get('descriptionurl', ''),
                            'width': info.get('width', 0), 'height': info.get('height', 0),
+                           'original_mime': info.get('mime', ''),
                            'attribution': plain(meta.get('Artist', {}).get('value', '')),
                            'license': plain(meta.get('LicenseShortName', {}).get('value', '')),
                            'license_url': meta.get('LicenseUrl', {}).get('value', ''),

@@ -9,7 +9,7 @@ from .media import MediaRegistry
 from .quality import generate_content
 from .research import ResearchCollector
 from .tag_review import audit_tags
-from .prompts import default_prompts
+from .prompts import default_prompts, assemble_generation
 
 def require_text(value, name):
     if not isinstance(value, str) or not value.strip():
@@ -28,7 +28,7 @@ class ImportPipeline:
                 raise RuntimeError("无法同步 Anki 标签；请打开 AnkiConnect，或显式选择初始标签表模式。") from error
         self.tag_catalog = tag_catalog or TagCatalog.load()
         self.tag_catalog.snapshot_info()
-        self.prompts = dict(prompts if prompts is not None else default_prompts())
+        self.prompts = {**default_prompts(), **(prompts or {})}
         self.tag_policy = self.prompts["tag_policy"]
 
     def generate(self, word, language, pronunciation_source="none", image_source="none", generation_mode="independent", sources=()):
@@ -44,16 +44,13 @@ class ImportPipeline:
             planner = type(self.model)(self.model.settings, self.model.transport)
             return planner.generate(self.prompts["search_planner"], json.dumps({"word":term,"language":lang},ensure_ascii=False))
         research = ResearchCollector().collect(word, language, generation_mode, sources, plan_query)
-        instruction = self.prompts["generation"]
-        instruction += "\n\n" + self.tag_policy
-        instruction += "\n\n" + self.prompts["style_" + language]
-        if image_source != 'none':
-            instruction += '\n\n' + self.prompts["image_plan"]
+        instruction = assemble_generation(self.prompts, language, image_source != 'none')
         user = json.dumps({"word": word, "language": language, **catalog.prompt_context(language), "research":research}, ensure_ascii=False)
         content, quality_check = generate_content(
             self.model, instruction, user, language,
             enforce=getattr(self.model, "enforce_readability", False),
             repair_prompt=self.prompts["content_repair"],
+            _validation=self.prompts['validation'],
         )
         if not isinstance(content, dict):
             raise ValueError("AI 输出必须为 JSON 对象。")
@@ -62,7 +59,7 @@ class ImportPipeline:
             cited=set(re.findall(r"\[(S\d+)\]",json.dumps(content,ensure_ascii=False)))
             if not cited or not cited.issubset(known_ids):
                 raise ValueError("联网回答缺少有效来源标记，或引用了不存在的来源。")
-        tag_audit = audit_tags(self.model, content, language, research, word=word, catalog=catalog, policy=self.tag_policy, prompts=self.prompts) if getattr(self.model, "enforce_readability", False) else None
+        tag_audit = audit_tags(self.model, content, language, research, word=word, catalog=catalog, policy=self.tag_policy, prompts=self.prompts, _validation=self.prompts['validation']) if getattr(self.model, "enforce_readability", False) else None
         senses = content.get("senses")
         if not isinstance(senses, list) or not senses:
             raise ValueError("至少需要一个词义。")

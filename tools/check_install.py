@@ -26,7 +26,7 @@ def main():
         env = {**os.environ, "ANKICARD_DATA_DIR": str(directory / "state")}
         for variable in ("PYTHONPATH", "DEEPSEEK_API_KEY", "OPENAI_API_KEY", "DEEPSEEK_SEARCH_API_KEY", "ANKI_AI_PROVIDER", "DEEPSEEK_MODEL", "OPENAI_MODEL"):
             env.pop(variable, None)
-        code = "from vocab_app.japanese_pitch import lookup_kanjium; from vocab_app.prompts import default_prompts; assert lookup_kanjium('猫','ねこ').pitch_accents; assert len(default_prompts()) == 10; print('Bundled resources OK')"
+        code = "from vocab_app.japanese_pitch import lookup_kanjium; from vocab_app.prompts import default_prompts; assert lookup_kanjium('猫','ねこ').pitch_accents; assert len(default_prompts()) == 11; print('Bundled resources OK')"
         subprocess.run([str(python), "-I", "-c", code], check=True, cwd=directory, env=env, capture_output=True)
         subprocess.run([str(python), "-I", "-m", "vocab_app.cli", "--language", "ja", "--word", "猫"], check=True, cwd=directory, env=env, capture_output=True)
         assert list((directory / "state/previews").glob("*.html"))
