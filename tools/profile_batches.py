@@ -112,6 +112,7 @@ def run(args):
                 write(directory/f'{index:03}-card.json',note)
             except Exception as error:
                 row.update(status='failed',error_type=type(error).__name__)
+                row['failed_stage']=getattr(error,'stage',None)
                 if getattr(error,'repair_history',None):
                     write(directory/f'{index:03}-diagnostics.json',{'stage':error.stage,'attempts':error.repair_history})
                 # Application errors are sanitized; keep validation diagnostics.
@@ -137,6 +138,8 @@ def run(args):
         manifest['batches'].append({k:v for k,v in batch.items() if k!='rows'})
         write(output/'manifest.json',manifest)
         print('DONE',batch_id,batch['successes'],batch['known_total_cost'],flush=True)
+        if args.pause_after_first and len(manifest['batches'])==1:
+            input('FIRST BATCH CHECKPOINT: press Enter to continue the authorized remaining batches. ')
     print('COMPLETE 12 isolated batches, 244 requested cards.',flush=True)
 
 
@@ -144,6 +147,7 @@ if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--live',action='store_true',help='Allow 244 paid generation runs')
     parser.add_argument('--output',type=Path,default=ROOT/'output/cache-prefix-batches-20261102')
+    parser.add_argument('--pause-after-first',action='store_true',help='Pause for inspection after the first batch, before spending on the rest')
     args=parser.parse_args()
     if not args.live:parser.error('Use --live to authorize paid API calls')
     for stream in (sys.stdout,sys.stderr):

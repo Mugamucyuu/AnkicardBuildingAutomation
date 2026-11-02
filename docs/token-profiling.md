@@ -84,3 +84,38 @@ This run improved acceptance overall, but did not reduce total spending. English
 The new diagnostics expose residual over-bold repairs that still exceed the unchanged 65% emphasis limit. Retaining the previous draft helps repair missing formatting and permits inspection, but does not guarantee model compliance. One run per cell is descriptive evidence, not a randomized causal estimate. No additional retries were silently performed to replace failed test results.
 
 Reproduce reports with `tools/compare_batch_profiles.py <before-directory> <after-directory>` after generating each full profile. The comparison checks word lists, prompts, settings and concurrency before producing cost/failure comparisons. Local reports are under the ignored `output/repair-batches-20261102/`, including `comparison.html`, per-call usage, generated samples and per-round failed diagnostics.
+
+## Three-version profile: formatting separation
+
+Same fixed word lists/order, model parameters, initial tags, per-batch concurrency and twelve sequential isolated batch sizes were reused. C intentionally changes the generation/style prompts and adds formatting/protected-wording checks; prompt hashes are not identical to A/B. C is the contract-fixed implementation: the formatter context and card are separated, and only an exact echoed envelope may be unwrapped before all original protection/final checks. All 199 regression tests passed before the formal run.
+
+| Version | Successes / 244 | Failures | Failure rate | Known total CNY | CNY/submitted word | CNY/accepted card incl. failures |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| A: fixed prefix | 217 | 27 | 11.07% | 5.4971 | 0.02253 | 0.02533 |
+| B: draft-aware repair | 227 | 17 | 6.97% | 5.6860 | 0.02330 | 0.02505 |
+| C: content + formatting | 237 | 7 | 2.87% | 6.8540 | 0.02809 | 0.02892 |
+
+All costs use identical off-peak CNY rates, including known failed/repair calls and successful Search fees. A/B each had one unknown-usage exception; C formal had none. These are usage-derived estimates, not balance reconciliation.
+
+| Batch | Total CNY A / B / C | CNY/submitted word A / B / C | Failures A / B / C | Failure rate A / B / C |
+| --- | ---: | ---: | ---: | ---: |
+| en-independent-1 | 0.0483 / 0.0496 / 0.0565 | 0.0483 / 0.0496 / 0.0565 | 0 / 0 / 0 | 0.0% / 0.0% / 0.0% |
+| en-independent-10 | 0.2406 / 0.2189 / 0.2968 | 0.0241 / 0.0219 / 0.0297 | 1 / 0 / 0 | 10.0% / 0.0% / 0.0% |
+| en-independent-50 | 0.7257 / 0.7932 / 0.8673 | 0.0145 / 0.0159 / 0.0173 | 2 / 4 / 1 | 4.0% / 8.0% / 2.0% |
+| en-web-1 | 0.0578 / 0.0551 / 0.0593 | 0.0578 / 0.0551 / 0.0593 | 0 / 0 / 0 | 0.0% / 0.0% / 0.0% |
+| en-web-10 | 0.2965 / 0.3139 / 0.3623 | 0.0297 / 0.0314 / 0.0362 | 3 / 0 / 0 | 30.0% / 0.0% / 0.0% |
+| en-web-50 | 1.0775 / 1.1958 / 1.4087 | 0.0215 / 0.0239 / 0.0282 | 6 / 5 / 0 | 12.0% / 10.0% / 0.0% |
+| ja-independent-1 | 0.0369 / 0.0524 / 0.0543 | 0.0369 / 0.0524 / 0.0543 | 1 / 0 / 0 | 100.0% / 0.0% / 0.0% |
+| ja-independent-10 | 0.2733 / 0.2473 / 0.2990 | 0.0273 / 0.0247 / 0.0299 | 1 / 1 / 0 | 10.0% / 10.0% / 0.0% |
+| ja-independent-50 | 0.8986 / 0.8559 / 1.1200 | 0.0180 / 0.0171 / 0.0224 | 3 / 3 / 4 | 6.0% / 6.0% / 8.0% |
+| ja-web-1 | 0.0572 / 0.0613 / 0.0745 | 0.0572 / 0.0613 / 0.0745 | 0 / 0 / 0 | 0.0% / 0.0% / 0.0% |
+| ja-web-10 | 0.3620 / 0.3573 / 0.4171 | 0.0362 / 0.0357 / 0.0417 | 1 / 0 / 1 | 10.0% / 0.0% / 10.0% |
+| ja-web-50 | 1.4225 / 1.4852 / 1.8382 | 0.0285 / 0.0297 / 0.0368 | 9 / 4 / 1 | 18.0% / 8.0% / 2.0% |
+
+C reduced observed failures from 27/17 to 7, but total known spending increased **24.69% vs A** and **20.54% vs B**. Cost per accepted card increased **14.16% vs A** and **15.46% vs B**. This is a reliability/cost tradeoff, not a demonstrated cost reduction. Japanese knowledge at 50 words worsened from 3/3 to 4 failures, so improvement is not uniform.
+
+Compared with B, C content-stage model cost fell from CNY **3.9635 to 2.8269**, but the new formatting stage cost **2.1441**. C made 318 content calls, 317 formatting calls, 243 tag-review calls and 122 planning calls. Seven terminal failures were classified as content 1, formatting 5 and tag review 1. C adds a protection gate against wording changes, so failure categories are not identical acceptance criteria despite retaining the same final style/content/tag validators.
+
+The initial C diagnostic trial exposed a context-envelope return-contract defect that simulated tests had missed. It was stopped, fixed and regression-tested before restarting the formal run. The interrupted trial completed **36 card attempts**, 1 accepted, 145 known model calls, at known off-peak cost **CNY 1.1115**. Up to four in-flight requests at interruption have unknown usage. This extra cost is disclosed separately and excluded from formal A/B/C comparisons; the known combined C test cost is **CNY 7.9656**.
+
+The comparison is one run per size, with repeated words across sizes and uncontrolled provider/search randomness. It is descriptive evidence, not a causal/statistical guarantee. Full local reports and generated examples are under ignored `output/two-phase-fixed-batches-20261102/`; the three-way report is `three-version-comparison.html`. The excluded diagnostic trial remains under `output/two-phase-batches-20261102/`. Raw cards, drafts, logs and API credentials are not published.

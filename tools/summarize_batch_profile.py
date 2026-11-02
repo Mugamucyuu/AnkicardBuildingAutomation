@@ -44,8 +44,9 @@ def main():
            'model_calls':sum(len(r['calls']) for r in rows),'searches':sum(r['searches'] for r in rows),
            'unmetered_errors':sum(len(r['unmetered_errors']) for r in rows),
            'generation_retries':sum(max(0,sum(c['stage']=='generation' for c in r['calls'])-1) for r in rows),
+           'formatting_retries':sum(max(0,sum(c['stage']=='formatting' for c in r['calls'])-1) for r in rows),
            'audit_retries':sum(max(0,sum(c['stage']=='tag_audit' for c in r['calls'])-1) for r in rows),
-           'stages':stages,'failures':[{'word':r['word'],'type':r.get('error_type'),'error':r.get('error')} for r in rows if r['status']!='success']}
+           'stages':stages,'failures':[{'word':r['word'],'type':r.get('error_type'),'stage':r.get('failed_stage'),'error':r.get('error')} for r in rows if r['status']!='success']}
         summary.append(s);batches.append(batch)
     data={'method':manifest,'completed_batches':len(summary),'summary':summary,'batches':batches}
     (root/'profile.json').write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding='utf-8')
@@ -62,7 +63,7 @@ def main():
         return result+'</table>'
     page='''<!doctype html><html lang="zh"><meta charset="utf-8"><title>v0.3.0 批量制卡缓存 Profile</title><style>body{font:16px/1.65 system-ui;max-width:1400px;margin:40px auto;padding:0 24px;color:#222}table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}td,th{padding:9px;border-bottom:1px solid #ddd;text-align:right}td:first-child,th:first-child{text-align:left}.scroll{overflow:auto}.note{background:#eeeafa;padding:16px;border-radius:8px}h2{margin-top:36px}</style><h1>v0.3.0 批量制卡缓存 Profile</h1>'''
     page+=f'<p>已完成 {len(summary)}/12 独立批次，共 {sum(s["requested"] for s in summary)} 次提交；成功 {sum(s["successes"] for s in summary)} 次。</p>'
-    page+='''<p class="note">12批按语言→模式→1/10/50词顺序依次执行，批内默认并发4（1词时并发1）。每批独立中性标识隔离上批缓存，无预热请求；标识只在测试传输层添加，正式程序仅调整JSON字段顺序。模型原始规则、语言风格、标签、例句要求及全部校验不变。样本为每种语言固定50词的前1/10/50词，两种模式使用同一词集。默认提示词、初始标签表、非思考模式、4096输出上限，保留配图规划；跳过外部媒体下载，不写Anki。成功卡片保留JSON供复核。</p>'''
+    page+='''<p class="note">12批按语言→模式→1/10/50词顺序依次执行，批内默认并发4（1词时并发1）。每批独立中性标识隔离上批缓存，无预热请求；标识只在测试传输层添加，不进入正式生成流程。本轮各批使用同一套当前提示词和最终校验设置；与前版的改动在对比报告中单列。样本为每种语言固定50词的前1/10/50词，两种模式使用同一词集。默认提示词、初始标签表、非思考模式、4096输出上限，保留配图规划；跳过外部媒体下载，不写Anki。成功卡片保留JSON供复核。</p>'''
     page+='<h2>统一空闲价（便于比较批量规模）</h2><div class="scroll">'+table('off_peak_yuan')+'</div>'
     page+='<h2>统一高峰价</h2><div class="scroll">'+table('peak_yuan')+'</div>'
     page+='<p>总费用包含所有已返回usage的成功、失败及修正调用，并加成功Search每次¥0.005。平均/提交词=总费用÷提交数；含失败平均/成功词=总费用÷成功数，失败全部时无该值。服务端消耗但响应丢失无法精确计费，未返回usage的异常单独计数，不当成免费调用。</p>'
