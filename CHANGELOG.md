@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Clarify the formatting return contract and safely normalize exact echoed context envelopes before applying the unchanged protected-content and final style checks.
 - Separate content authoring from formatting: plain-text first drafts retain substantive validation, then a dedicated editable formatting prompt adds emphasis/paragraphs. Reject formatting responses that change protected wording, examples, citations or tags, and apply the full final validator before tag audit/import.
 - Content and tag repair requests now include the latest complete draft and precise validation feedback, with instructions to preserve unaffected fields. Keep all style/content checks and the original three-attempt limits; retain failed drafts and per-attempt errors in local diagnostics.
 - Move the unchanged tag catalog before per-word data in generation and tag-audit JSON requests, allowing a batch to reuse longer DeepSeek cache prefixes. Keep prompts, output schemas, proposal handling and all validation/repair rules intact.

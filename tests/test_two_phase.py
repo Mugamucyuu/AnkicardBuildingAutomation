@@ -36,10 +36,27 @@ class TwoPhaseTests(unittest.TestCase):
         original=plain(valid_content());model=Mock();model.generate.return_value=json.dumps(valid_content())
         result,check=format_content(model,original,'en',default_prompts()['formatting'],'Fix {issues}')
         self.assertEqual(result,valid_content());self.assertEqual(check['attempts'],1)
-        request=json.loads(model.generate.call_args.args[1])
+        context,card=model.generate.call_args.args[1].split('not the context above:\n')
+        request=json.loads(context.split('\n\nReturn only')[0])
         self.assertEqual(request['format_rules']['max_bold_ratio'],.65)
-        self.assertEqual(request['content'],original)
+        self.assertEqual(json.loads(card),original)
         self.assertNotIn('allowed_tags',request)
+
+    def test_exact_echo_envelope_is_unwrapped_but_card_is_still_protected(self):
+        original=plain(valid_content())
+        def echo(system,user,**kwargs):
+            context=user.split('\n\nReturn only')[0]
+            return json.dumps({**json.loads(context),'content':valid_content()})
+        model=Mock();model.generate.side_effect=echo
+        result,_=format_content(model,original,'en','FORMAT','Fix {issues}')
+        self.assertEqual(result,valid_content())
+        changed=valid_content();changed['senses'][0]['examples'][0]='Changed meaning.'
+        def bad_echo(system,user,**kwargs):
+            context=json.loads(user.split('\n\nReturn only')[0])
+            return json.dumps({**context,'content':changed})
+        model.generate.side_effect=bad_echo
+        with self.assertRaises(RepairValidationError):
+            format_content(model,original,'en','FORMAT','Fix {issues}')
 
     def test_formatter_rejects_content_changes_and_repairs_latest_draft(self):
         original=plain(valid_content());changed=valid_content();changed['senses'][0]['examples'][0]='Invented new example.'
