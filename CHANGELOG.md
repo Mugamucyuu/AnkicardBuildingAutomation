@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Content and tag repair requests now include the latest complete draft and precise validation feedback, with instructions to preserve unaffected fields. Keep all style/content checks and the original three-attempt limits; retain failed drafts and per-attempt errors in local diagnostics.
 - Move the unchanged tag catalog before per-word data in generation and tag-audit JSON requests, allowing a batch to reuse longer DeepSeek cache prefixes. Keep prompts, output schemas, proposal handling and all validation/repair rules intact.
 - Add request-equivalence regression tests and an opt-in paid benchmark for sequential en/ja × knowledge/search × 1/10/50-word batches, with batch-level cache isolation and explicit failure-cost accounting.
 

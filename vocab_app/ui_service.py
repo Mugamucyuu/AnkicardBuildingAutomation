@@ -304,6 +304,12 @@ class UIService:
             if config["auto_import"] and not job["cancel"] and not note.get("proposed_tags"):
                 self.import_item(job_id, index)
         except Exception as error:
+            if getattr(error, 'repair_history', None):
+                try:
+                    write_json(root / 'diagnostics' / f'{index}.json',
+                               {'stage': error.stage, 'attempts': error.repair_history})
+                except OSError:
+                    pass  # Preserve the original failure if diagnostic storage fails.
             if item["status"] != "import_failed":
                 safe = re.sub(r"sk-[A-Za-z0-9_-]+", "[redacted]", str(error))[:1200] if isinstance(error, (ValueError, RuntimeError)) else ""
                 self._status(job, item, status="failed", error="生成失败。请检查网络、额度、prompt 格式或来源可用性，再重试。 " + safe)

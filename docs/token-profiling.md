@@ -1,5 +1,7 @@
 # Request prefixes and token profiling
 
+Repair requests retain the stable original request prefix, then append validation issues and the latest complete model response as explicitly untrusted JSON data. The repair instruction asks for a complete corrected object while preserving unaffected fields. Malformed JSON is included as an escaped raw string. Both generation and tag audit keep their original validation and three-attempt limit. A final validation failure retains per-attempt drafts/errors under the job's local `diagnostics/` directory; the benchmark stores equivalent diagnostic files. Drafts never become importable cards merely because they were retained.
+
 The v0.3.0-based optimization changes the **order of JSON fields only** in generation and tag-review requests. The stable catalog comes first, followed by the word, language and research/content. Existing system prompts, language style prompts, JSON values, tag proposals, generation limits and all content/tag validation and repair remain intact. Each word still has its own generation and audit calls; paid search remains separate.
 
 The same catalog snapshot and prompts are reused within a batch. Moving the catalog ahead of the changing word makes it eligible for prefix caching across words. Generation and audit have different system instructions and should be treated as separate cache prefixes. New tag proposals are still included in the effective audit catalog; their presence may shorten prefix reuse. No cache-hit guarantee or free output is implied.
@@ -55,3 +57,30 @@ Known usage totals: **15,183,042 tokens**, **121 successful searches**, **CNY 5.
 For the 50-word batches, the cost including failures divided by successfully generated cards was CNY **0.0151** (English knowledge), **0.0245** (English search), **0.0191** (Japanese knowledge), **0.0347** (Japanese search). Cache hit rates were 86.7–93.9%. The savings across sizes also reflect word complexity and repair rates; this is not a paired before/after causal experiment.
 
 Content and style constraints were not relaxed. Many failures were existing selective-bold/JSON checks that still failed after automatic repair. Full local usage records, error details and generated samples are kept under the ignored `output/cache-prefix-batches-20261102/` directory; they are not distributed as application data. Use the two profiling scripts to reproduce the method with a new output directory and current prices.
+
+## Draft-aware repair comparison: 2026-11-02
+
+The follow-up reused the exact same word lists/order, all eleven prompt hashes, model, output cap, concurrency and twelve sequential isolated batch sizes. The only application behavior change was to give content/tag repair the latest draft plus validation errors and request preservation of unaffected fields. The three-attempt limits and every validation rule were retained. All 190 regression tests passed.
+
+Across 244 attempts: **217 → 227 successes**, **27 → 17 failures**, **11.07% → 6.97% failure rate** (−4.10 percentage points; −37.0% failures). Uniform off-peak known cost: **CNY 5.4971 → 5.6860** (+3.44%). Cost per attempted word: **0.02253 → 0.02330**. Including failed spending, cost per accepted card: **0.02533 → 0.02505** (−1.12%, approximately unchanged). Each run had one unknown-usage exception, so this is not exact account-balance reconciliation.
+
+| Batch | Total CNY before → after | CNY/submitted word before → after | Failures before → after | Failure rate before → after |
+| --- | ---: | ---: | ---: | ---: |
+| en-independent-1 | 0.0483 → 0.0496 | 0.0483 → 0.0496 | 0 → 0 | 0.0% → 0.0% |
+| en-independent-10 | 0.2406 → 0.2189 | 0.0241 → 0.0219 | 1 → 0 | 10.0% → 0.0% |
+| en-independent-50 | 0.7257 → 0.7932 | 0.0145 → 0.0159 | 2 → 4 | 4.0% → 8.0% |
+| en-web-1 | 0.0578 → 0.0551 | 0.0578 → 0.0551 | 0 → 0 | 0.0% → 0.0% |
+| en-web-10 | 0.2965 → 0.3139 | 0.0297 → 0.0314 | 3 → 0 | 30.0% → 0.0% |
+| en-web-50 | 1.0775 → 1.1958 | 0.0215 → 0.0239 | 6 → 5 | 12.0% → 10.0% |
+| ja-independent-1 | 0.0369 → 0.0524 | 0.0369 → 0.0524 | 1 → 0 | 100.0% → 0.0% |
+| ja-independent-10 | 0.2733 → 0.2473 | 0.0273 → 0.0247 | 1 → 1 | 10.0% → 10.0% |
+| ja-independent-50 | 0.8986 → 0.8559 | 0.0180 → 0.0171 | 3 → 3 | 6.0% → 6.0% |
+| ja-web-1 | 0.0572 → 0.0613 | 0.0572 → 0.0613 | 0 → 0 | 0.0% → 0.0% |
+| ja-web-10 | 0.3620 → 0.3573 | 0.0362 → 0.0357 | 1 → 0 | 10.0% → 0.0% |
+| ja-web-50 | 1.4225 → 1.4852 | 0.0285 → 0.0297 | 9 → 4 | 18.0% → 8.0% |
+
+This run improved acceptance overall, but did not reduce total spending. English knowledge at 50 words worsened from 2 to 4 failures, so improvement is not uniform. Generation calls increased **485 → 493**, tag-audit calls **224 → 227**, and noncached input rose **1,772,300 → 2,041,109 tokens**. Output fell **716,470 → 694,006 tokens**, but this did not offset the extra input cost. Draft context and stochastic variation both affect these totals; do not attribute every difference solely to the new repair strategy.
+
+The new diagnostics expose residual over-bold repairs that still exceed the unchanged 65% emphasis limit. Retaining the previous draft helps repair missing formatting and permits inspection, but does not guarantee model compliance. One run per cell is descriptive evidence, not a randomized causal estimate. No additional retries were silently performed to replace failed test results.
+
+Reproduce reports with `tools/compare_batch_profiles.py <before-directory> <after-directory>` after generating each full profile. The comparison checks word lists, prompts, settings and concurrency before producing cost/failure comparisons. Local reports are under the ignored `output/repair-batches-20261102/`, including `comparison.html`, per-call usage, generated samples and per-round failed diagnostics.

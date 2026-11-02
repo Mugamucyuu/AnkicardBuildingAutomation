@@ -111,6 +111,8 @@ def run(args):
                 write(directory/f'{index:03}-card.json',note)
             except Exception as error:
                 row.update(status='failed',error_type=type(error).__name__)
+                if getattr(error,'repair_history',None):
+                    write(directory/f'{index:03}-diagnostics.json',{'stage':error.stage,'attempts':error.repair_history})
                 # Application errors are sanitized; keep validation diagnostics.
                 if isinstance(error,(ValueError,RuntimeError)):row['error']=str(error)
             row['seconds']=time.monotonic()-begin

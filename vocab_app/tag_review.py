@@ -3,6 +3,7 @@ from .validation import message as _message, validation_scope
 import json
 from .taxonomy import TagCatalog
 from .prompts import default_prompts
+from .repair import repair_request, RepairValidationError
 
 @validation_scope
 def audit_tags(model, content, language, research, word='', catalog=None, policy=None, prompts=None):
@@ -18,9 +19,14 @@ def audit_tags(model, content, language, research, word='', catalog=None, policy
     known = {e['tag'] for e in context['allowed_tags']}
     instruction = prompts['tag_review'] + '\n\n' + (policy if policy is not None else prompts['tag_policy'])
     feedback = ''
+    history = []
+    previous = None
+    original_request = json.dumps(payload, ensure_ascii=False)
     for attempt in range(3):
         try:
-            result = json.loads(client.generate(instruction, json.dumps(payload, ensure_ascii=False) + feedback, json_output=True))
+            request = original_request if not feedback else repair_request(original_request, prompts['tag_repair'], [str(feedback)], previous)
+            previous = client.generate(instruction, request, json_output=True)
+            result = json.loads(previous)
             decisions = result.get('decisions')
             if not isinstance(decisions, list) or len(decisions) != len(original):
                 raise ValueError(_message('tag_021'))
@@ -47,5 +53,6 @@ def audit_tags(model, content, language, research, word='', catalog=None, policy
             result['attempts'] = attempt + 1
             return result
         except (ValueError, KeyError, TypeError, AttributeError) as error:
-            feedback = '\n\n' + prompts['tag_repair'].replace('{issues}', str(error))
-    raise ValueError('标签复核未通过：' + feedback)
+            feedback = str(error)
+            history.append({'attempt': attempt + 1, 'issues': [feedback], 'response': previous})
+    raise RepairValidationError('标签复核未通过：' + feedback, 'tag_audit', history)

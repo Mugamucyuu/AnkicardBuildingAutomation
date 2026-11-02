@@ -2,6 +2,7 @@
 from .validation import message as _message, rules as _rules, validation_scope
 import json
 import re
+from .repair import repair_request, RepairValidationError
 
 def explanation_language_issues(content, language):
     """Catch common language drift while allowing quoted words and source names."""
@@ -108,6 +109,8 @@ def generate_content(model, instruction, user, language, enforce=False, attempts
         from .prompts import default_prompts
         repair_prompt = default_prompts()['content_repair']
     feedback = []
+    history = []
+    raw = None
     try:
         source_ids = {s['id'] for s in json.loads(user).get('research', {}).get('sources', [])}
     except (ValueError, TypeError, AttributeError):
@@ -115,7 +118,7 @@ def generate_content(model, instruction, user, language, enforce=False, attempts
     for attempt in range(attempts if enforce else 1):
         request = user
         if feedback:
-            request += '\n\n' + repair_prompt.replace('{issues}', '\n'.join(feedback))
+            request = repair_request(user, repair_prompt, feedback, raw)
         raw = model.generate(instruction, request, json_output=True)
         try:
             content = json.loads(raw)
@@ -123,6 +126,7 @@ def generate_content(model, instruction, user, language, enforce=False, attempts
             if not enforce:
                 raise ValueError('AI 输出不是有效 JSON，本次不生成可导入笔记。') from None
             feedback = [_message('quality_019')]
+            history.append({'attempt': attempt + 1, 'issues': list(feedback), 'response': raw})
             continue
         feedback = readability_issues(content, language) if enforce else []
         if source_ids:
@@ -131,4 +135,5 @@ def generate_content(model, instruction, user, language, enforce=False, attempts
                 feedback.append(_message('quality_020'))
         if not feedback:
             return (content, {'enabled': enforce, 'attempts': attempt + 1, 'passed': True})
-    raise ValueError('模型输出未通过自动检查：' + '; '.join(feedback))
+        history.append({'attempt': attempt + 1, 'issues': list(feedback), 'response': raw})
+    raise RepairValidationError('模型输出未通过自动检查：' + '; '.join(feedback), 'generation', history)
