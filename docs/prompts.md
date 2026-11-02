@@ -1,5 +1,9 @@
 # Prompt inventory and transparency
 
+Generation is now two-phase. The main/language prompts request complete plain-text learning content. Substantive checks (language, examples, required explanations, collocation structure, readings, origin and citations) run first. A separate **Formatting editor** (`formatting.txt`) then applies emphasis and paragraph layout using the active numeric validation rules. It receives the accepted draft, not the full tag catalog/search context. The application rejects wording/data changes outside bold markers and paragraph whitespace in permitted fields, and runs the full final checks. Already correctly formatted drafts skip an unnecessary formatting call. Offline demos keep their shipped fixtures.
+
+There are twelve prompt stages. `formatting` supports the same viewing, editing, upload, versioning, binding, batch snapshots and request tracing as existing stages. Existing custom main/style prompts remain selectable; if they already produce valid formatting, that draft is retained. The new first-draft defaults retain the teaching tone, explanation language, example counts and required semantic fields, while moving the presentation task to the formatting editor.
+
 Every authored model instruction is file-backed. UI Prompt management keeps each type separate and supports direct text editing, new prompts, TXT/MD import, versioned saves, explicit activation, deletion of custom versions and restore. `validation.txt` contains JSON inside a text file so it uses the same editing/versioning workflow.
 
 ## Editing in the application

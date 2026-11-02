@@ -1,5 +1,7 @@
 # Architecture
 
+Live generation runs content authoring/repair, substantive validation, independent formatting/repair with a protected-content comparison and full final validation, then tag audit. Formatting can only change allowed bold/paragraph presentation; examples, IDs, citations, tags and other fields stay protected. Each stage retains failed drafts and validation feedback for diagnosis. The offline fixture path is unchanged.
+
 Generation and tag-audit request JSON places the catalog before changing headword/evidence/prose fields. System instructions and JSON values are unchanged; each stage can reuse its own stable prefix across words. Proposed tags remain in the audit's effective catalog and can shorten the reusable prefix. Cache hits are provider-managed and best-effort. See [token profiling](token-profiling.md) for controlled batch measurements.
 
 ```text

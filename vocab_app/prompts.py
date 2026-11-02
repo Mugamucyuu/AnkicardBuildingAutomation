@@ -14,6 +14,7 @@ DEFAULTS = {
     "content_repair": "content_repair.txt", "tag_repair": "tag_repair.txt",
     "image_plan": "image_plan.txt",
     "validation": "validation.txt",
+    "formatting": "formatting.txt",
 }
 FILE_TYPES = (*DEFAULTS, "supplement", "legacy", "unclassified")
 

@@ -176,7 +176,7 @@ def smoke_check(window, server, report_path, loaded):
         assert window.evaluate_js("Boolean(document.querySelector('#version-current').textContent)")
         bootstrap = server.request("/api/bootstrap")
         assert not any(bootstrap["credentials"].values()), "Use a clean test environment"
-        assert len(bootstrap["prompts"]["stages"]) == 11
+        assert len(bootstrap["prompts"]["stages"]) == 12
         server.request("/api/settings", {"palette": "paper", "theme": "dark"}, bootstrap["token"])
         server.request("/api/prompts/save", {"name": "desktop-check.md", "type": "supplement",
                                             "text": "Desktop smoke retained prompt."}, bootstrap["token"])

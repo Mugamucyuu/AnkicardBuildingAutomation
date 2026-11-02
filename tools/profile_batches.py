@@ -77,6 +77,7 @@ def run(args):
             if not is_search:
                 system=payload['messages'][0]['content']
                 stage=('search_planner' if system==prompts['search_planner'] else
+                       'formatting' if system==prompts.get('formatting') else
                        'tag_audit' if system.startswith(prompts['tag_review']) else 'generation')
                 payload={**payload,'messages':[dict(m) for m in payload['messages']]}
                 payload['messages'][0]['content']='Benchmark batch identifier: '+scope+'\n'+system

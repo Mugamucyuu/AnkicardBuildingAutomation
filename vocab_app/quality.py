@@ -38,7 +38,7 @@ def explanation_language_issues(content, language):
             issues.append(_message('quality_003', v0=field))
     return issues
 
-def readability_issues(content, language):
+def readability_issues(content, language, formatting=True):
     issues = []
     if not isinstance(content, dict):
         return [_message('quality_004')]
@@ -50,10 +50,10 @@ def readability_issues(content, language):
             issues.append(_message('quality_006'))
 
     def check_emphasis(text, field):
-        if not _rules()['check_emphasis']:
-            return
         if not isinstance(text, str) or not text.strip():
             issues.append(_message('quality_007', v0=field))
+            return
+        if not formatting or not _rules()['check_emphasis']:
             return
         spans = re.findall('\\*\\*([^*\\n]+)\\*\\*', text)
         if not spans:
@@ -72,7 +72,7 @@ def readability_issues(content, language):
         if isinstance(text, str):
             for paragraph in re.split('\\n\\s*\\n', text):
                 labels = re.findall('\\*\\*[^*\\n]{0,60}(?:vs\\.|との違い|Context & Tone|Emphasis|Native-speaker impressions)[^*\\n]*\\*\\*', paragraph)
-                if len(labels) > 1 and _rules()['check_paragraphs']:
+                if formatting and len(labels) > 1 and _rules()['check_paragraphs']:
                     issues.append(_message('quality_012', v0=key))
     for key in ('etymology', 'nuance', 'synonyms'):
         check_emphasis(analysis.get(key), 'analysis.' + key)
@@ -93,7 +93,9 @@ def readability_issues(content, language):
                 issues.append(_message('quality_015', v0=label))
                 continue
             phrase, explanation = (item.get('phrase'), item.get('explanation'))
-            if not isinstance(phrase, str) or not re.fullmatch('\\*\\*[^*\\n]+\\*\\*', phrase):
+            if not isinstance(phrase, str) or not phrase.strip():
+                issues.append(_message('quality_007', v0=label + '.phrase'))
+            elif formatting and not re.fullmatch('\\*\\*[^*\\n]+\\*\\*', phrase):
                 issues.append(_message('quality_016', v0=label))
             if not isinstance(explanation, str) or len(explanation.strip()) < _rules()['minimum_collocation_length']:
                 issues.append(_message('quality_017', v0=label))
@@ -104,7 +106,7 @@ def readability_issues(content, language):
     return issues
 
 @validation_scope
-def generate_content(model, instruction, user, language, enforce=False, attempts=3, repair_prompt=None):
+def generate_content(model, instruction, user, language, enforce=False, attempts=3, repair_prompt=None, content_only=False):
     if repair_prompt is None:
         from .prompts import default_prompts
         repair_prompt = default_prompts()['content_repair']
@@ -128,7 +130,7 @@ def generate_content(model, instruction, user, language, enforce=False, attempts
             feedback = [_message('quality_019')]
             history.append({'attempt': attempt + 1, 'issues': list(feedback), 'response': raw})
             continue
-        feedback = readability_issues(content, language) if enforce else []
+        feedback = readability_issues(content, language, formatting=not content_only) if enforce else []
         if source_ids:
             cited = set(re.findall('\\[(S\\d+)\\]', json.dumps(content, ensure_ascii=False)))
             if not cited or not cited.issubset(source_ids):

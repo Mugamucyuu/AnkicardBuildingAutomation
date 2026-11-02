@@ -46,7 +46,7 @@ def main():
                 assert kernel32.WaitForSingleObject(handle, 0) == 0, 'Worker left running'
             finally:
                 kernel32.CloseHandle(handle)
-        print('Desktop OK: actual WebView2, unchanged UI, 11 prompts, three offline languages, clean shutdown; no Python on PATH.')
+        print('Desktop OK: actual WebView2, unchanged UI, 12 prompts, three offline languages, clean shutdown; no Python on PATH.')
 
 
 if __name__ == '__main__':

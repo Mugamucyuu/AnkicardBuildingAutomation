@@ -7,6 +7,7 @@ from uuid import uuid4
 from .taxonomy import TagCatalog
 from .media import MediaRegistry
 from .quality import generate_content
+from .formatting import format_content
 from .research import ResearchCollector
 from .tag_review import audit_tags
 from .prompts import default_prompts, assemble_generation
@@ -53,7 +54,12 @@ class ImportPipeline:
             enforce=getattr(self.model, "enforce_readability", False),
             repair_prompt=self.prompts["content_repair"],
             _validation=self.prompts['validation'],
+            content_only=True,
         )
+        if getattr(self.model, 'enforce_readability', False):
+            content, formatting_check = format_content(self.model,content,language,
+                self.prompts['formatting'],self.prompts['content_repair'],_validation=self.prompts['validation'])
+            quality_check['formatting'] = formatting_check
         if not isinstance(content, dict):
             raise ValueError("AI 输出必须为 JSON 对象。")
         if research["sources"]:

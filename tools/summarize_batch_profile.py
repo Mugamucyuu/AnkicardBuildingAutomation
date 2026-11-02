@@ -34,7 +34,7 @@ def main():
         costs=batch['known_total_cost']
         actual=sum(actual_model_cost(c) or 0 for r in rows for c in r['calls'])+.005*sum(r['searches'] for r in rows)
         stages={stage:{key:sum(c[key] for r in rows for c in r['calls'] if c['stage']==stage)
-                       for key in ('input','hit','miss','output')} for stage in ('search_planner','generation','tag_audit')}
+                       for key in ('input','hit','miss','output')} for stage in ('search_planner','generation','formatting','tag_audit')}
         s={'id':batch['id'],'language':batch['language'],'mode':batch['mode'],'requested':n,'successes':k,
            'seconds':batch['seconds'],'tokens':total,'mean_tokens_per_requested':total['total']/n,
            'cost':costs,'mean_cost_per_requested':{a:b/n for a,b in costs.items()},

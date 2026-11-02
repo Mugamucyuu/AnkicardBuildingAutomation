@@ -44,7 +44,7 @@ class DesktopTests(unittest.TestCase):
             server.start()
             self.assertIsNone(server.process.poll())
             bootstrap = server.request('/api/bootstrap')
-            self.assertEqual(len(bootstrap['prompts']['stages']), 11)
+            self.assertEqual(len(bootstrap['prompts']['stages']), 12)
             self.assertEqual(server.request('/api/jobs'), [])
             self.assertEqual(server.request('/api/parse', {'text': '猫,apple'}, bootstrap['token']),
                              {'words': ['猫', 'apple']})

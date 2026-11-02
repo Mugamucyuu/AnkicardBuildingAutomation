@@ -164,6 +164,7 @@ class UIService:
         if language not in ('en','ja','ko'):raise ValueError('语言无效。')
         prompts=self.prompts.snapshot()
         return {'generation':assemble_generation(prompts,language,images),
+                'formatting':prompts['formatting'],
                 'search_planner':prompts['search_planner'],
                 'tag_review':prompts['tag_review']+'\n\n'+prompts['tag_policy'],
                 'content_repair':prompts['content_repair'],'tag_repair':prompts['tag_repair'],
