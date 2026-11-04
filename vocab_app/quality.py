@@ -38,7 +38,7 @@ def explanation_language_issues(content, language):
             issues.append(_message('quality_003', v0=field))
     return issues
 
-def readability_issues(content, language, formatting=True):
+def readability_issues(content, language, formatting=True, *, defer_origin=False):
     issues = []
     if not isinstance(content, dict):
         return [_message('quality_004')]
@@ -79,7 +79,7 @@ def readability_issues(content, language, formatting=True):
     for index, sense in enumerate(content.get('senses', [])):
         if isinstance(sense, dict):
             check_emphasis(sense.get('definition'), 'senses[' + str(index) + '].definition')
-            if language in ('ja', 'ko') and (not any((isinstance(t, str) and t.startswith('origin::') for t in sense.get('tags', [])))):
+            if language in ('ja', 'ko') and not defer_origin and (not any((isinstance(t, str) and t.startswith('origin::') for t in sense.get('tags', [])))):
                 issues.append(_message('quality_013', v0=index))
     collocations = analysis.get('collocations')
     if not _rules()['check_collocations']:
@@ -105,8 +105,19 @@ def readability_issues(content, language, formatting=True):
             issues.append(_message('quality_018', v0=str(index), v1=str(minimum)))
     return issues
 
+def citation_ids(content, *, learner_only=False):
+    if learner_only and isinstance(content, dict):
+        senses = content.get('senses', [])
+        content = {'analysis': content.get('analysis'), 'senses': [
+            {key: sense.get(key) for key in ('definition', 'examples')}
+            for sense in senses if isinstance(sense, dict)
+        ]}
+    return set(re.findall(r'\[(S\d+)\]', json.dumps(content, ensure_ascii=False)))
+
+
 @validation_scope
-def generate_content(model, instruction, user, language, enforce=False, attempts=3, repair_prompt=None, content_only=False):
+def generate_content(model, instruction, user, language, enforce=False, attempts=3, repair_prompt=None,
+                     content_only=False, *, parse=json.loads, defer_origin=False, learner_citations=False, warmup=None):
     if repair_prompt is None:
         from .prompts import default_prompts
         repair_prompt = default_prompts()['content_repair']
@@ -121,18 +132,21 @@ def generate_content(model, instruction, user, language, enforce=False, attempts
         request = user
         if feedback:
             request = repair_request(user, repair_prompt, feedback, raw)
-        raw = model.generate(instruction, request, json_output=True)
+        if warmup is not None:
+            raw = warmup.generate(model, instruction, request)
+        else:
+            raw = model.generate(instruction, request, json_output=True)
         try:
-            content = json.loads(raw)
-        except (ValueError, TypeError):
+            content = parse(raw)
+        except (ValueError, TypeError) as error:
             if not enforce:
                 raise ValueError('AI 输出不是有效 JSON，本次不生成可导入笔记。') from None
-            feedback = [_message('quality_019')]
+            feedback = [str(error) if type(error) is ValueError and parse is not json.loads else _message('quality_019')]
             history.append({'attempt': attempt + 1, 'issues': list(feedback), 'response': raw})
             continue
-        feedback = readability_issues(content, language, formatting=not content_only) if enforce else []
+        feedback = readability_issues(content, language, formatting=not content_only, defer_origin=defer_origin) if enforce else []
         if source_ids:
-            cited = set(re.findall('\\[(S\\d+)\\]', json.dumps(content, ensure_ascii=False)))
+            cited = citation_ids(content, learner_only=learner_citations)
             if not cited or not cited.issubset(source_ids):
                 feedback.append(_message('quality_020'))
         if not feedback:

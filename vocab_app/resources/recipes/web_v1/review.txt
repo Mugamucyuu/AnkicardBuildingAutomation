@@ -1,0 +1,3 @@
+The draft tags are suggestions. Review against each sense and the catalog, even if draft reasons are absent.
+For each final tag, provide one concise, specific reason grounded in the sense.
+Keep reason (the correction summary) brief, especially when the draft is correct.

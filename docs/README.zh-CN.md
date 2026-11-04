@@ -1,12 +1,12 @@
 # 中文使用指南
 
-Ankicard Building Automation 是本地运行的英日韩词汇制卡工具，支持中日英界面。当前版本为 **0.4.0（Alpha）**，提供 Windows 本地安装版、四套配色和应用内提示词编辑。
+Ankicard Building Automation 是本地运行的英日韩词汇制卡工具，支持中日英界面。当前版本为 **0.4.1（Alpha）**，提供 Windows 本地安装版、四套配色和应用内提示词编辑。
 
 ## 安装
 
 ### Windows 安装版（推荐）
 
-从 [GitHub Releases](https://github.com/Mugamucyuu/AnkicardBuildingAutomation/releases/latest) 下载 `Ankicard-0.4.0-windows-x64-Setup.exe`，双击安装，然后从桌面或开始菜单打开 **Ankicard**。支持 Windows 10 1809+ / Windows 11 的 x64 系统。
+从 [GitHub Releases](https://github.com/Mugamucyuu/AnkicardBuildingAutomation/releases/latest) 下载 `Ankicard-0.4.1-windows-x64-Setup.exe`，双击安装，然后从桌面或开始菜单打开 **Ankicard**。支持 Windows 10 1809+ / Windows 11 的 x64 系统。
 
 无需安装 Python、配置环境、输入命令或访问 localhost。程序在独立窗口中呈现原有界面，自动启动和关闭内部服务；安装包包含 WebView2 完整安装组件，缺少时自动安装。联网生成仍需要模型密钥和额度，导入仍需要桌面 Anki 和 AnkiConnect。
 

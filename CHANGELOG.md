@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.1
+
+- Use the W7 recipe for new English and Japanese AI-search jobs with DeepSeek Flash and the bundled prompts.
+- Curate dictionary excerpts, share a compact tag catalog across authoring and review, and repair emphasis using exact spans.
+- Reject document thumbnails and uncorroborated diagram matches in automatic image selection.
+
 ## 0.4.0
 
 - Fix the Windows title-bar close deadlock by returning immediately from the native close callback; inspect prompts, confirm active work, save progress and hand off updates asynchronously.

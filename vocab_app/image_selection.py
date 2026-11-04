@@ -22,7 +22,7 @@ def validate_plan(value, senses):
     if value.get('sense_id') not in ids or not query or len(query.split()) > 6:
         return None
     result = {'sense_id': value['sense_id'], 'query': query}
-    result['kind'] = value.get('kind') if value.get('kind') in ('photo', 'diagram') else 'photo'
+    result['kind'] = value.get('kind') if value.get('kind') in ('photo', 'diagram') else ('diagram' if contains(query, 'diagram') else 'photo')
     for key in ('alternatives', 'avoid_scenes'):
         items = value.get(key, [])
         if not isinstance(items, list) or len(items) > 3:
@@ -62,6 +62,9 @@ def rank_candidate(asset, plan):
         return -100, ['missing_credit_or_license']
     if Path(urlparse(asset.get('url', '')).path).suffix.lower() not in ('.jpg', '.jpeg', '.png', '.webp'):
         return -100, ['unsupported_image']
+    original_type = asset.get('original_mime') or ''
+    if (original_type and not original_type.startswith('image/')) or Path(title).suffix.lower() in ('.pdf', '.djvu'):
+        return -100, ['non_image_original']
     width, height = asset.get('width', 0), asset.get('height', 0)
     if not width or not height or min(width, height) < 200 or max(width / height, height / width) > 4:
         return -100, ['too_small_or_extreme_aspect']
@@ -107,6 +110,8 @@ def rank_candidate(asset, plan):
             reasons.append('distracting_scene:' + scene)
     diagram = asset.get('original_mime') == 'image/svg+xml' or any(contains(text, term) for term in ('diagram', 'schematic', 'illustration', 'geometry', 'graph'))
     if plan.get('kind') == 'diagram':
+        if not diagram and not context:
+            return -100, ['diagram_without_context']
         score += 3 if diagram else -3
         reasons.append('diagram_preferred' if diagram else 'not_identified_as_diagram')
         label = re.search(r'[-_. ]([a-z]{2})\.(?:svg|png|jpg)$', title, re.I)

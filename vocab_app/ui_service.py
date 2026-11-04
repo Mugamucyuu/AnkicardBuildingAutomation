@@ -275,6 +275,9 @@ class UIService:
         catalog = TagCatalog.load() if provider == "offline" or data.get("tag_source") == "seed" else TagCatalog.from_anki(self.anki, self.metadata_path)
         config = {"language": language, "provider": provider, "model": data.get("model", ""), "mode": mode, "sources": sources,
                   "audio": audio, "image": image, "deck": deck, "auto_import": bool(data.get("auto_import")), "tag_source": data.get("tag_source", "anki"), "concurrency": concurrency}
+        from .web_recipe import VERSION as WEB_RECIPE, supports_recipe
+        if supports_recipe(provider, config["model"], language, mode, prompts):
+            config["generation_recipe"] = WEB_RECIPE
         job = {"id": uuid4().hex, "created": datetime.now(timezone.utc).isoformat(), "status": "queued", "cancel": False, "config": config,
                "items": [{"word": word, "status": "queued", "error": "", "note_id": None} for word in words]}
         root = self.directory / "jobs" / job["id"]
@@ -293,9 +296,10 @@ class UIService:
             item.update(values)
             self.save(job)
 
-    def _generate_item(self, job_id, index, prompts, catalog):
+    def _generate_item(self, job_id, index, prompts, catalog, warmup=None):
         from .examples import OfflineClient
         from .public_media import PublicMediaRegistry, download_assets
+        from .web_recipe import VERSION as WEB_RECIPE
         job = self.jobs[job_id]
         config, item = job["config"], job["items"][index]
         root = self.directory / "jobs" / job_id
@@ -309,7 +313,8 @@ class UIService:
         try:
             from .request_trace import recording_transport
             model = OfflineClient() if config["provider"] == "offline" else ModelClient(Settings(config["provider"], config["model"]), recording_transport(root / 'requests' / str(index)))
-            pipeline = ImportPipeline(model, PublicMediaRegistry(), copy.deepcopy(catalog), prompts=prompts)
+            pipeline = ImportPipeline(model, PublicMediaRegistry(), copy.deepcopy(catalog), prompts=prompts,
+                                      web_recipe=config.get("generation_recipe") == WEB_RECIPE, warmup=warmup)
             checkpoint_path = root / "checkpoints" / f"{index}.json"
             pipeline.resume_state = json.loads(checkpoint_path.read_text(encoding="utf-8")) if checkpoint_path.exists() else {}
             def checkpoint(state):
@@ -364,8 +369,10 @@ class UIService:
         try:
             # Batches queue globally; each word owns clients, catalog and media.
             concurrency = validate_concurrency(job["config"].get("concurrency", DEFAULT_CONCURRENCY))
+            from .web_recipe import BatchWarmup, VERSION as WEB_RECIPE
+            warmup = BatchWarmup() if job["config"].get("generation_recipe") == WEB_RECIPE and concurrency > 1 else None
             with ThreadPoolExecutor(max_workers=concurrency, thread_name_prefix="vocab-word") as workers:
-                futures = [workers.submit(self._generate_item, job_id, index, prompts, catalog)
+                futures = [workers.submit(self._generate_item, job_id, index, prompts, catalog, warmup)
                            for index, item in enumerate(job["items"]) if item["status"] == "queued"]
                 for future in futures:
                     future.result()

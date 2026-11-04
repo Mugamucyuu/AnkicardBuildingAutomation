@@ -1,17 +1,19 @@
 """Generate a structured preview. No Anki writes or media downloads here."""
 import json
-import re
 import hashlib
 import copy
+from functools import partial
 from datetime import datetime, timezone, timedelta
 from uuid import uuid4
 from .taxonomy import TagCatalog
 from .media import MediaRegistry
-from .quality import generate_content
-from .formatting import format_content
+from .quality import generate_content, citation_ids
+from .formatting import format_content, format_web_content
 from .research import ResearchCollector
 from .tag_review import audit_tags
 from .prompts import default_prompts, assemble_generation
+from .web_recipe import (VERSION as WEB_RECIPE, supports_recipe, catalog_prefix,
+                         generation_instruction, parse_draft, recipe_prompts)
 
 def require_text(value, name):
     if not isinstance(value, str) or not value.strip():
@@ -19,7 +21,7 @@ def require_text(value, name):
     return value.strip()
 
 class ImportPipeline:
-    def __init__(self, model_client, media=None, tag_catalog=None, prompts=None):
+    def __init__(self, model_client, media=None, tag_catalog=None, prompts=None, *, web_recipe=None, warmup=None):
         self.model = model_client
         self.media = media or MediaRegistry()
         if tag_catalog is None and getattr(model_client, "enforce_readability", False):
@@ -32,6 +34,8 @@ class ImportPipeline:
         self.tag_catalog.snapshot_info()
         self.prompts = {**default_prompts(), **(prompts or {})}
         self.tag_policy = self.prompts["tag_policy"]
+        self.web_recipe = web_recipe
+        self.warmup = warmup
         self.resume_state = {}
         self.checkpoint = None
 
@@ -58,31 +62,52 @@ class ImportPipeline:
         def plan_query(term, lang):
             planner = type(self.model)(self.model.settings, self.model.transport)
             return planner.generate(self.prompts["search_planner"], json.dumps({"word":term,"language":lang},ensure_ascii=False))
-        research = stage("research", lambda: ResearchCollector().collect(word, language, generation_mode, sources, plan_query))
-        instruction = assemble_generation(self.prompts, language, image_source != 'none')
-        # Keep the batch-stable catalog before the headword/evidence so different
-        # words can share the long input prefix. Values and instructions are unchanged.
-        user = json.dumps({**catalog.prompt_context(language), "word": word, "language": language, "research":research}, ensure_ascii=False)
+        optimized = self.web_recipe
+        if optimized is None:
+            settings = self.model.settings
+            optimized = supports_recipe(settings.provider, settings.model, language, generation_mode, self.prompts)
+        optimized = optimized and language in ("en", "ja") and generation_mode == "web"
+        context = catalog.prompt_context(language)
+        if optimized:
+            from .web_research import DirectEntryCollector
+            collector = DirectEntryCollector()
+            prefix = catalog_prefix(self.tag_policy, context)
+            instruction = generation_instruction(prefix, self.prompts, language, image_source != "none")
+            payload = {}
+            authoring = {"parse": partial(parse_draft, catalog=catalog, language=language),
+                         "defer_origin": language == "ja", "learner_citations": True, "warmup": self.warmup}
+        else:
+            collector = ResearchCollector()
+            instruction = assemble_generation(self.prompts, language, image_source != "none")
+            payload = context
+            authoring = {}
+        research = stage("research", lambda: collector.collect(word, language, generation_mode, sources, plan_query))
+        user = json.dumps({**payload, "word": word, "language": language, "research": research}, ensure_ascii=False)
         content, quality_check = stage("content", lambda: generate_content(
             self.model, instruction, user, language,
             enforce=getattr(self.model, "enforce_readability", False),
             repair_prompt=self.prompts["content_repair"],
-            _validation=self.prompts['validation'],
-            content_only=True,
+            _validation=self.prompts["validation"],
+            content_only=True, **authoring,
         ))
-        if getattr(self.model, 'enforce_readability', False):
-            content, formatting_check = stage("formatting", lambda: format_content(self.model,content,language,
-                self.prompts['formatting'],self.prompts['content_repair'],_validation=self.prompts['validation']))
-            quality_check['formatting'] = formatting_check
+        if getattr(self.model, "enforce_readability", False):
+            formatter = format_web_content if optimized else format_content
+            formatting = {"emphasis_prompt": recipe_prompts()["emphasis"]} if optimized else {}
+            content, formatting_check = stage("formatting", lambda: formatter(
+                self.model, content, language, self.prompts["formatting"], self.prompts["content_repair"],
+                _validation=self.prompts["validation"], **formatting,
+            ))
+            quality_check["formatting"] = formatting_check
         if not isinstance(content, dict):
             raise ValueError("AI 输出必须为 JSON 对象。")
         if research["sources"]:
             known_ids={source["id"] for source in research["sources"]}
-            cited=set(re.findall(r"\[(S\d+)\]",json.dumps(content,ensure_ascii=False)))
+            cited = citation_ids(content, learner_only=optimized)
             if not cited or not cited.issubset(known_ids):
                 raise ValueError("联网回答缺少有效来源标记，或引用了不存在的来源。")
         def review():
-            audit = audit_tags(self.model, content, language, research, word=word, catalog=catalog, policy=self.tag_policy, prompts=self.prompts, _validation=self.prompts['validation'])
+            audit = audit_tags(self.model, content, language, research, word=word, catalog=catalog, policy=self.tag_policy, prompts=self.prompts, _validation=self.prompts['validation'],
+                               shared_catalog=(prefix, context) if optimized else None)
             return content, audit
         tag_audit = None
         if getattr(self.model, "enforce_readability", False):
@@ -159,6 +184,9 @@ class ImportPipeline:
             "tag_policy_sha256": hashlib.sha256(self.tag_policy.encode()).hexdigest(),
             "prompt_sha256": {k: hashlib.sha256(v.encode()).hexdigest() for k, v in self.prompts.items()},
             "image_plan_prompt_sha256": hashlib.sha256(self.prompts["image_plan"].encode()).hexdigest() if image_source != 'none' else None,
+            **({"generation_recipe": WEB_RECIPE,
+                "recipe_prompt_sha256": {k: hashlib.sha256(v.encode()).hexdigest() for k, v in recipe_prompts().items()}}
+               if optimized else {}),
             "word": word, "language": language, "senses": senses, "analysis": analysis,
             "reading": content.get("reading", ""), "alternative_forms": forms,
             "note_tags": catalog.validate(note_tags, language), "assignments": assignments,

@@ -52,11 +52,18 @@ def free_dictionary_entry(word, language):
   return {"url":url,"title":word+" — Free Dictionary API","excerpt":"\n".join(parts)[:4500],"content_type":"dictionary_entry_excerpt"}
  except (ValueError,TypeError,AttributeError,RuntimeError,OSError):return None
 
+class NoEvidenceError(ValueError):
+ pass
+
+
 class DeepSeekSearch:
+ def __init__(self, count=4):
+  self.count=count
+
  def search(self,query):
   key=os.getenv("DEEPSEEK_SEARCH_API_KEY") or os.getenv("DEEPSEEK_API_KEY")
   if not key:raise ValueError("联网资料检索需要 DEEPSEEK_SEARCH_API_KEY 或 DEEPSEEK_API_KEY。")
-  data=request_json("https://api.deepseek.com/v1/tools/search",{"query":query[:128],"count":4,"need_content":True},headers={"Authorization":"Bearer "+key},timeout=60)
+  data=request_json("https://api.deepseek.com/v1/tools/search",{"query":query[:128],"count":self.count,"need_content":True},headers={"Authorization":"Bearer "+key},timeout=60)
   return data.get("results",[])
 
 class ResearchCollector:
@@ -108,5 +115,5 @@ class ResearchCollector:
     excerpt=" ".join(text.split()[:100])[:1800]
     results.append({"id":"S"+str(len(results)+1),"url":url,"title":hit.get("title",url),
                     "excerpt":excerpt,"content_type":"page_excerpt" if hit.get("content") else "search_summary"})
-  if not results:raise ValueError("没有取到可用资料；不会静默改为模型独立生成。")
+  if not results:raise NoEvidenceError("没有取到可用资料；不会静默改为模型独立生成。")
   return {"mode":mode,"sources":results,"queries":queries}

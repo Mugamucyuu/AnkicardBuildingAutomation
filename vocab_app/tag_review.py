@@ -6,7 +6,7 @@ from .prompts import default_prompts
 from .repair import repair_request, RepairValidationError
 
 @validation_scope
-def audit_tags(model, content, language, research, word='', catalog=None, policy=None, prompts=None):
+def audit_tags(model, content, language, research, word='', catalog=None, policy=None, prompts=None, *, shared_catalog=None):
     prompts = prompts if prompts is not None else default_prompts()
     client = type(model)(model.settings, model.transport)
     catalog = catalog.clone() if catalog is not None else TagCatalog.load()
@@ -18,6 +18,12 @@ def audit_tags(model, content, language, research, word='', catalog=None, policy
     payload = {**context, 'word': word or content.get('word', ''), 'reading': content.get('reading', ''), 'language': language, 'senses': content['senses'], 'analysis': content.get('analysis', {}), 'sources': research.get('sources', [])}
     known = {e['tag'] for e in context['allowed_tags']}
     instruction = prompts['tag_review'] + '\n\n' + (policy if policy is not None else prompts['tag_policy'])
+    if shared_catalog is not None:
+        from .web_recipe import audit_proposal_rows, recipe_prompts
+        prefix, base = shared_catalog
+        instruction = prefix + prompts['tag_review'] + '\n' + recipe_prompts()['review']
+        payload = {key: value for key, value in payload.items() if key not in context}
+        payload.update(audit_proposal_rows(base, context))
     feedback = ''
     history = []
     previous = None
@@ -38,7 +44,13 @@ def audit_tags(model, content, language, research, word='', catalog=None, policy
                 decision = by_id[sense['id']]
                 tags = decision['keep_tags']
                 if not isinstance(tags, list) or any((not isinstance(t, str) or t not in known for t in tags)):
-                    raise ValueError(_message('tag_023'))
+                    reason = _message('tag_023')
+                    if shared_catalog is not None and isinstance(tags, list):
+                        invalid = [tag for tag in tags if not isinstance(tag, str) or tag not in known]
+                        reason += " Invalid tag data for this sense: " + json.dumps(
+                            {"sense_id": sense["id"], "invalid_tags": invalid}, ensure_ascii=False
+                        )
+                    raise ValueError(reason)
                 if not any((t.startswith('pos::') for t in tags)) or (language in ('ja', 'ko') and (not any((t.startswith('origin::') for t in tags)))):
                     raise ValueError(_message('tag_024'))
                 if language == 'en' and any((t.startswith('origin::') for t in tags)):

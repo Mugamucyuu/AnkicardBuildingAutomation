@@ -2,7 +2,7 @@
 
 ## 下载与使用
 
-1. 从 [GitHub Releases](https://github.com/Mugamucyuu/AnkicardBuildingAutomation/releases/latest) 下载 `Ankicard-0.4.0-windows-x64-Setup.exe`。
+1. 从 [GitHub Releases](https://github.com/Mugamucyuu/AnkicardBuildingAutomation/releases/latest) 下载 `Ankicard-0.4.1-windows-x64-Setup.exe`。
 2. 双击安装，默认安装到当前用户，无需管理员权限。桌面快捷方式默认选中。
 3. 从桌面或开始菜单打开 **Ankicard**，原有界面显示在独立窗口中。
 
@@ -43,7 +43,7 @@ powershell -ExecutionPolicy Bypass -File tools/build_windows.ps1 `
 .\.venv\Scripts\python.exe tools/check_desktop.py dist/Ankicard/Ankicard.exe
 powershell -ExecutionPolicy Bypass -File tools/check_windows_installer.ps1 `
   -Python .\.venv\Scripts\python.exe `
-  -Installer dist/windows/Ankicard-0.4.0-windows-x64-Setup.exe
+  -Installer dist/windows/Ankicard-0.4.1-windows-x64-Setup.exe
 ```
 
 `prepare_windows_toolchain.ps1` obtains Inno Setup 7.1.1 from its official GitHub release, checks its pinned SHA-256 and signature, and installs the compiler in `output/toolchain/inno`. It downloads the x64 WebView2 Evergreen Standalone Installer from Microsoft's distribution link and checks its Microsoft signature. This shared runtime updates independently; rebuilding later can produce different bytes. Build dependencies and the compiler are pinned, but the result is not claimed to be bit-for-bit reproducible.
@@ -51,7 +51,7 @@ powershell -ExecutionPolicy Bypass -File tools/check_windows_installer.ps1 `
 `build_windows.ps1` generates Windows version resources and consolidated dependency licenses, builds a windowed PyInstaller one-folder application, then wraps it with Inno Setup into one downloadable installer. It packages only selected application resources, never the local state directory. Outputs:
 
 - `dist/Ankicard/`: self-contained application, including Python.
-- `dist/windows/Ankicard-0.4.0-windows-x64-Setup.exe`: distributable installer.
+- `dist/windows/Ankicard-0.4.1-windows-x64-Setup.exe`: distributable installer.
 - `dist/windows/SHA256SUMS.txt`: installer checksum.
 - `dist/windows/BUILD-INFO.json`: application/source revision and compiler/runtime provenance (no local paths or credentials).
 
